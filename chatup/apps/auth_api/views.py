@@ -43,3 +43,32 @@ class LogoutView(APIView):
     def get(request):
         logout(request)
         return Response({'detail': _('Successfully logged out.')})
+
+
+class SignUpView(APIView):
+    """ Create a new user instance and log in with the given data """
+
+    permission_classes = permissions.AllowAny,
+
+    @swagger_auto_schema(
+        request_body=serializers.SignUpSerializer,
+        responses={
+            '200': 'Successfully registered and logged in',
+            '400': 'Validation failed',
+        }
+    )
+    def post(self, request):
+        if request.user.is_authenticated:
+            return Response(
+                {'detail': _('You are already logged in.')},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = serializers.SignUpSerializer(
+            data=request.data,
+            context={'request': request, 'view': self}
+        )
+
+        serializer.is_valid(raise_exception=True)
+        login(request, serializer.save())
+        return Response({'detail': _('Successfully registered and logged in.')})
