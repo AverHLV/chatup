@@ -34,3 +34,7 @@ Use `CUP_CONF` environment variable for custom config from `.ini` file in the `c
 otherwise `config.ini` will be used.
 
 Log in with credentials `admin / admin` or `streamer / streamer`.
+
+## Documentation
+
+Swagger UI available on `/api/docs`.
