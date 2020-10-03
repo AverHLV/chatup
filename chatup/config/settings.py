@@ -193,11 +193,11 @@ FIXTURE_DIRS = BASE_DIR / 'fixtures',
 LOCALE_PATHS = BASE_DIR / 'locale',
 
 LANGUAGES = (
-    ('en-us', _('English')),
+    ('en', _('English')),
     ('ru', _('Russian')),
 )
 
-default_lang = config.get('django', 'default_lang', fallback='en-us')
+default_lang = config.get('django', 'default_lang', fallback='en')
 
 if default_lang not in [lang[0] for lang in LANGUAGES]:
     raise ImproperlyConfigured(f'Specified default language not supported: {default_lang}')
