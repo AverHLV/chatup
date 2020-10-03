@@ -5,19 +5,23 @@ from django.contrib.auth.models import AbstractUser, UserManager
 from ..abstract import NameTranslation
 
 ROLE_SIDS = (
+    ('user', 'User'),
     ('moderator', 'Moderator'),
     ('administrator', 'Administrator'),
     ('streamer', 'Streamer'),
 )
 
-MODER_ROLE_SID = ROLE_SIDS[0][0]
-ADMIN_ROLE_SID = ROLE_SIDS[1][0]
-STREAMER_ROLE_SID = ROLE_SIDS[2][0]
+USER_ROLE_SID = ROLE_SIDS[0][0]
+MODER_ROLE_SID = ROLE_SIDS[1][0]
+ADMIN_ROLE_SID = ROLE_SIDS[2][0]
+STREAMER_ROLE_SID = ROLE_SIDS[3][0]
+
+DEFAULT_ROLE_ID = 1
 
 
 class Role(NameTranslation):
     """
-    User role model, defines user privileges and permissions
+    User role model, defines user permissions
 
     name: user-friendly multi-language sid representation
     sid: role string identifier
@@ -46,15 +50,15 @@ class CustomUser(AbstractUser):
     Chatup custom user model
 
     email: user email for notifications or news, optional
-    watched_time: total time of the watched broadcasts (seconds)
-    nick_color: username color in the chat, black by default
-    role: the user-specific role, ordinary users have no roles by default
+    watchtime: total time of the watched broadcasts (seconds)
+    username_color: username color in chat, hex format, black by default
+    role: user-specific role, ordinary users have 'user' role by default
     """
 
     email = models.EmailField(unique=True, blank=True, null=True)
-    watched_time = models.PositiveIntegerField(default=0)
+    watchtime = models.PositiveIntegerField(default=0)
 
-    nick_color = models.CharField(
+    username_color = models.CharField(
         default='000000',
         max_length=6,
         validators=[validators.RegexValidator(r'^(?:[0-9a-fA-F]{3}){2}$')]
@@ -62,8 +66,7 @@ class CustomUser(AbstractUser):
 
     role = models.ForeignKey(
         Role,
-        blank=True,
-        null=True,
+        default=DEFAULT_ROLE_ID,
         on_delete=models.PROTECT,
         related_name='users'
     )

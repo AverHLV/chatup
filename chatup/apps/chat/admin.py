@@ -17,5 +17,5 @@ class CustomUserAdmin(UserAdmin):
 
 
 CustomUserAdmin.fieldsets += ('Additional fields', {
-    'fields': ('watched_time', 'nick_color', 'role')
+    'fields': ('watchtime', 'username_color', 'role')
 }),
