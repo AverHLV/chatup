@@ -9,8 +9,9 @@ class TranslatedModelSerializer(serializers.ModelSerializer):
     """
     Model serializer that changes field source depending on the request language.
 
-    Mapping will be skipped without a request context. Localized fields
-    (<field_name>_<language_code>) should be omitted in the serializer meta
+    Cannot be used as a nested serializer. Mapping will be skipped without a request
+    context. Localized fields (<field_name>_<language_code>) should be omitted
+    in the serializer meta
     """
 
     def __init__(self, *args, **kwargs):
