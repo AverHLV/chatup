@@ -20,6 +20,11 @@ Install fixtures:
 python manage.py loaddata init
 ```
 
+Compile translations:
+```
+django-admin compilemessages
+```
+
 Run development server:
 ```
 python manage.py runserver
