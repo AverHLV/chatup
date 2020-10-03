@@ -15,7 +15,6 @@ config = ConfigParser()
 config.read(CONFIG_PATH)
 
 # Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 SECRET_KEY = config.get('django', 'secret_key')
 
@@ -77,7 +76,6 @@ TEMPLATES = [
 ]
 
 # Database
-# https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 DATABASES = {
     'default': {
@@ -91,7 +89,6 @@ DATABASES = {
 }
 
 # Password validation
-# https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -191,7 +188,6 @@ if not DEBUG:
 FIXTURE_DIRS = BASE_DIR / 'fixtures',
 
 # Internationalization
-# https://docs.djangoproject.com/en/3.1/topics/i18n/
 
 LOCALE_PATHS = BASE_DIR / 'locale',
 
@@ -221,7 +217,6 @@ USE_L10N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
