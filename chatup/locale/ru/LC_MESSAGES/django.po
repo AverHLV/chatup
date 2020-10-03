@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-03 16:35+0300\n"
+"POT-Creation-Date: 2020-10-03 21:57+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,6 +19,22 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
 "%100>=11 && n%100<=14)? 2 : 3);\n"
+
+#: .\apps\auth_api\serializers.py:32
+msgid "User not found by the given credentials."
+msgstr "По заданным учетным данным пользователь не найден."
+
+#: .\apps\auth_api\views.py:29
+msgid "You are already logged in."
+msgstr "Вы уже вошли в систему."
+
+#: .\apps\auth_api\views.py:37
+msgid "Successfully logged in."
+msgstr "Вход прошел успешно."
+
+#: .\apps\auth_api\views.py:46
+msgid "Successfully logged out."
+msgstr "Выход прошел успешно."
 
 #: .\apps\chat\admin.py:20
 msgid "Additional fields"

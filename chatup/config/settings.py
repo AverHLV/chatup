@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     # own apps
 
     'apps.chat',
+    'apps.auth_api',
 ]
 
 MIDDLEWARE = [

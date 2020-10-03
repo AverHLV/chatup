@@ -3,20 +3,22 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny
+
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('apps.chat.urls')),
+    path('api/auth/', include('apps.auth_api.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 if settings.DEBUG:
     schema_view = get_schema_view(
         openapi.Info(title='ChatUP API', default_version=settings.REST_API_VERSION),
         public=True,
-        permission_classes=(IsAuthenticated,),
+        permission_classes=(AllowAny,),
     )
 
     urlpatterns.append(
