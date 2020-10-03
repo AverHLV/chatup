@@ -75,12 +75,12 @@ docs/_build/
 # PyBuilder
 target/
 
-
 ### Django ###
 *.log
 *.pyc
 
 .env
+.idea
 venv
 *.ini
 !config_default.ini
