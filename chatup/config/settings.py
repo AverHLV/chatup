@@ -1,4 +1,5 @@
 from django.core.exceptions import ImproperlyConfigured
+from django.utils.translation import ugettext_lazy as _
 
 from os import environ
 from pathlib import Path
@@ -26,6 +27,10 @@ ROOT_URLCONF = 'config.urls'
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# Authentication
+
+AUTH_USER_MODEL = 'chat.CustomUser'
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -36,6 +41,10 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+
+    # own apps
+
+    'apps.chat',
 ]
 
 MIDDLEWARE = [
@@ -181,7 +190,19 @@ FIXTURE_DIRS = BASE_DIR / 'fixtures',
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LOCALE_PATHS = BASE_DIR / 'locale',
+
+LANGUAGES = (
+    ('en-us', _('English')),
+    ('ru', _('Russian')),
+)
+
+default_lang = config.get('django', 'default_lang', fallback='en-us')
+
+if default_lang not in [lang[0] for lang in LANGUAGES]:
+    raise ImproperlyConfigured(f'Specified default language not supported: {default_lang}')
+
+LANGUAGE_CODE = default_lang
 
 TIME_ZONE = 'UTC'
 
