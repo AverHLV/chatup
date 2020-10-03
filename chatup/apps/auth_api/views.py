@@ -18,7 +18,7 @@ class LoginView(APIView):
         request_body=serializers.LoginSerializer,
         responses={
             '200': 'Successfully logged in',
-            '400': 'Wrong credentials',
+            '400': 'Wrong credentials or user is inactive or already logged in',
         }
     )
     def post(self, request):
