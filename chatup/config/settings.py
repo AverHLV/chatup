@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_yasg',
 
     # own apps
 
@@ -124,6 +125,8 @@ SESSION_COOKIE_AGE = 3600 * 12
 
 # REST API
 
+REST_API_VERSION = 'v1'
+
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'apps.pagination.CustomLimitOffsetPagination',
     'PAGE_SIZE': 30,
@@ -203,6 +206,11 @@ if default_lang not in [lang[0] for lang in LANGUAGES]:
     raise ImproperlyConfigured(f'Specified default language not supported: {default_lang}')
 
 LANGUAGE_CODE = default_lang
+
+# Default field translation language code in the translation mixins,
+# should be first in the 'LANGUAGES' tuple
+
+DEFAULT_FIELD_LANGUAGE = LANGUAGES[0][0]
 
 TIME_ZONE = 'UTC'
 
