@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-03 16:17+0300\n"
+"POT-Creation-Date: 2020-10-03 16:35+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,7 +20,11 @@ msgstr ""
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
 "%100>=11 && n%100<=14)? 2 : 3);\n"
 
-#: .\apps\chat\models.py:35
+#: .\apps\chat\admin.py:20
+msgid "Additional fields"
+msgstr "Дополнительные поля"
+
+#: .\apps\chat\models.py:35 .\apps\chat\models.py:77
 msgid "role"
 msgstr "роль"
 
@@ -29,18 +33,18 @@ msgid "roles"
 msgstr "роли"
 
 #: .\apps\chat\models.py:65
-msgid "Total time of the watched broadcasts (seconds)"
-msgstr "Общее время просмотренных трансляций (секунды)"
+msgid "Total time of the watched broadcasts (seconds)."
+msgstr "Общее время просмотренных трансляций (секунды)."
 
 #: .\apps\chat\models.py:72
-msgid "Username color in chat, hex format"
-msgstr "Цвет имени пользователя в чате, шестнадцатеричный формат"
+msgid "Username color in chat, hex format."
+msgstr "Цвет имени пользователя в чате, шестнадцатеричный формат."
 
-#: .\apps\chat\models.py:86
+#: .\apps\chat\models.py:87
 msgid "user"
 msgstr "пользователь"
 
-#: .\apps\chat\models.py:87
+#: .\apps\chat\models.py:88
 msgid "users"
 msgstr "пользователи"
 

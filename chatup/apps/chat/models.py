@@ -62,18 +62,19 @@ class CustomUser(AbstractUser):
 
     watchtime = models.PositiveIntegerField(
         default=0,
-        help_text=_('Total time of the watched broadcasts (seconds)')
+        help_text=_('Total time of the watched broadcasts (seconds).')
     )
 
     username_color = models.CharField(
         default='000000',
         max_length=6,
         validators=[validators.RegexValidator(r'^(?:[0-9a-fA-F]{3}){2}$')],
-        help_text=_('Username color in chat, hex format')
+        help_text=_('Username color in chat, hex format.')
     )
 
     role = models.ForeignKey(
         Role,
+        verbose_name=_('role'),
         default=USER_DEFAULT_ROLE_ID,
         on_delete=models.PROTECT,
         related_name='users'

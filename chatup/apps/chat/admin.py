@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.utils.translation import gettext_lazy as _
 
 from . import models
 
@@ -12,10 +13,10 @@ class RoleAdmin(admin.ModelAdmin):
 
 @admin.register(models.CustomUser)
 class CustomUserAdmin(UserAdmin):
-    search_fields = 'username', 'role'
+    search_fields = 'username',
     list_display = 'username', 'email', 'role'
 
 
-CustomUserAdmin.fieldsets += ('Additional fields', {
+CustomUserAdmin.fieldsets += (_('Additional fields'), {
     'fields': ('watchtime', 'username_color', 'role')
 }),
