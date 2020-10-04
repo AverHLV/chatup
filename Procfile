@@ -1,2 +1,2 @@
 release: cd chatup && echo $CONFIG | base64 -d > ./config/config_deploy.ini && python manage.py migrate && python manage.py compilemessages && python manage.py collectstatic --noinput
-web: cd chatup && daphne config.asgi:application --port $PORT --bind 0.0.0.0 -v2
+web: cd chatup && echo $CONFIG | base64 -d > ./config/config_deploy.ini && daphne config.asgi:application --port $PORT --bind 0.0.0.0 -v2
