@@ -26,11 +26,8 @@ jobs:
                   python -m pip install --upgrade pip
                   pip install -r requirements.txt
 
-            - name: Change directory
-              run: |
-                  cd chatup
-
             - name: Run tests
+              working-directory: ./chatup
               env:
                   CUP_CONF: config_ci_tests.ini
               run: |
