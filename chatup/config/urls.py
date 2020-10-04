@@ -17,10 +17,11 @@ urlpatterns = [
 if settings.DEBUG:
     schema_view = get_schema_view(
         openapi.Info(title='ChatUP API', default_version=settings.REST_API_VERSION),
+        url=settings.REST_API_DOCS_URL,
         public=True,
         permission_classes=(AllowAny,),
     )
 
     urlpatterns.append(
-        path('api/docs/', schema_view.with_ui('swagger', cache_timeout=0), name='docs')
+        path('api/docs/', schema_view.with_ui(), name='docs')
     )
