@@ -14,7 +14,7 @@ if not CONFIG_PATH.is_file():
 config = ConfigParser()
 config.read(CONFIG_PATH)
 
-# Quick-start development settings - unsuitable for production
+# General
 
 SECRET_KEY = config.get('django', 'secret_key')
 
@@ -146,11 +146,6 @@ REST_FRAMEWORK = {
     ]
 }
 
-if DEBUG:
-    REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'].append(
-        'rest_framework.renderers.BrowsableAPIRenderer'
-    )
-
 # Logging configuration
 
 if not DEBUG:
@@ -190,7 +185,9 @@ FIXTURE_DIRS = BASE_DIR / 'fixtures',
 
 # Internationalization
 
-LOCALE_PATHS = BASE_DIR / 'locale',
+LOCALE_PATHS = BASE_DIR / 'locales',
+
+# First tuple determines a default field translation language code in the translation mixins
 
 LANGUAGES = (
     ('en', _('English')),
@@ -203,11 +200,6 @@ if default_lang not in [lang[0] for lang in LANGUAGES]:
     raise ImproperlyConfigured(f'Specified default language not supported: {default_lang}')
 
 LANGUAGE_CODE = default_lang
-
-# Default field translation language code in the translation mixins,
-# should be first in the 'LANGUAGES' tuple
-
-DEFAULT_FIELD_LANGUAGE = LANGUAGES[0][0]
 
 TIME_ZONE = 'UTC'
 

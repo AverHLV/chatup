@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-04 00:13+0300\n"
+"POT-Creation-Date: 2020-10-04 13:30+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -20,7 +20,7 @@ msgstr ""
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
 "%100>=11 && n%100<=14)? 2 : 3);\n"
 
-#: .\apps\auth_api\serializers.py:33
+#: .\apps\auth_api\serializers.py:34
 msgid "User not found by the given credentials."
 msgstr "По заданным учетным данным пользователь не найден."
 
@@ -68,10 +68,10 @@ msgstr "пользователь"
 msgid "users"
 msgstr "пользователи"
 
-#: .\config\settings.py:196
+#: .\config\settings.py:193
 msgid "English"
 msgstr "Английский"
 
-#: .\config\settings.py:197
+#: .\config\settings.py:194
 msgid "Russian"
 msgstr "Русский"
