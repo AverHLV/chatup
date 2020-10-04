@@ -38,3 +38,11 @@ Log in with credentials `admin / admin` or `streamer / streamer`.
 ## Documentation
 
 Swagger UI available on `/api/docs`.
+
+## Important CLI commands
+
+Run tests in parallel with preserving testing database:
+
+```
+python manage.py test --keepdb --parallel
+```
