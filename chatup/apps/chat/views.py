@@ -1,9 +1,23 @@
 from rest_framework import mixins, viewsets
 from rest_framework.views import APIView, Response
 
+from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
 
 from . import models, serializers
+
+
+class LangView(APIView):
+    """ Retrieve supported languages with human-readable representations """
+
+    @staticmethod
+    def get(_request):
+        data = {
+            lang[0]: {'repr': lang[1], 'default': lang[0] == settings.LANGUAGE_CODE}
+            for lang in settings.LANGUAGES
+        }
+
+        return Response(data)
 
 
 class UserView(APIView):

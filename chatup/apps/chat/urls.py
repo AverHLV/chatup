@@ -7,6 +7,7 @@ router = DefaultRouter()
 router.register('roles', views.RoleViewSet)
 
 urlpatterns = [
-    path('user/', views.UserView.as_view()),
+    path('general/lang/', views.LangView.as_view()),
+    path('general/user/', views.UserView.as_view()),
     *router.urls,
 ]
