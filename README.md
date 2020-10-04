@@ -22,7 +22,7 @@ python manage.py loaddata init
 
 Compile translations:
 ```
-django-admin compilemessages
+python manage.py compilemessages
 ```
 
 Run development server:
