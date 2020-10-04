@@ -8,7 +8,10 @@ from . import models, serializers
 
 
 class LangView(APIView):
-    """ Retrieve supported languages with human-readable representations """
+    """
+    Retrieve language cookie name and supported languages with
+    human-readable representations
+    """
 
     @staticmethod
     def get(_request):
@@ -17,7 +20,7 @@ class LangView(APIView):
             for lang in settings.LANGUAGES
         }
 
-        return Response(data)
+        return Response({'cookie_name': settings.LANGUAGE_COOKIE_NAME, 'languages': data})
 
 
 class UserView(APIView):

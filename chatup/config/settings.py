@@ -201,6 +201,8 @@ if default_lang not in [lang[0] for lang in LANGUAGES]:
 
 LANGUAGE_CODE = default_lang
 
+LANGUAGE_COOKIE_NAME = 'lang'
+
 TIME_ZONE = 'UTC'
 
 USE_I18N = True
