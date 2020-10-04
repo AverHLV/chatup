@@ -1,4 +1,5 @@
 release: cd chatup &&
+         echo $CONFIG > ./config/config_deploy.ini
          python manage.py migrate &&
          python manage.py compilemessages &&
          python manage.py collectstatic --noinput

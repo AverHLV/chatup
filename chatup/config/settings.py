@@ -117,10 +117,21 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Cache
 
+if config.get('cache', 'user', fallback=None) is None:
+    location = f'redis://{config.get("cache", "host")}:{config.get("cache", "port")}/0'
+
+else:
+    user = config.get('cache', 'user')
+    password = config.get('cache', 'password')
+    host = config.get('cache', 'host')
+    port = config.get('cache', 'port')
+
+    location = f'redis://{user}:{password}@{host}:{port}/0'
+
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': f'redis://{config.get("cache", "host")}:{config.get("cache", "port")}/0',
+        'LOCATION': location,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
