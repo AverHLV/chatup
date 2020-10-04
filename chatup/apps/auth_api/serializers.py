@@ -8,6 +8,7 @@ from rest_framework.exceptions import ValidationError
 User = get_user_model()
 USERNAME_LENGTH = User._meta.get_field(User.USERNAME_FIELD).max_length
 PASSWORD_LENGTH = User._meta.get_field('password').max_length
+EMAIL_LENGTH = User._meta.get_field('email').max_length
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -39,7 +40,7 @@ class SignUpSerializer(serializers.Serializer):
     username = serializers.CharField(required=True, max_length=USERNAME_LENGTH)
     password1 = serializers.CharField(required=True, max_length=PASSWORD_LENGTH)
     password2 = serializers.CharField(required=True, max_length=PASSWORD_LENGTH)
-    email = serializers.EmailField(required=False)
+    email = serializers.EmailField(required=False, max_length=EMAIL_LENGTH)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
