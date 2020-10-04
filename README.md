@@ -1,5 +1,7 @@
 # ChatUP
 
+[![Actions Status](https://github.com/AverHLV/chatup/workflows/Tests/badge.svg)](https://github.com/AverHLV/chatup/actions)
+
 ChatUP - it`s an interactive platform with chat and related mechanisms for simple and reliable
 streaming without dependency on popular platforms.
 
