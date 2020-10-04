@@ -2,6 +2,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import TemplateView
 
 from rest_framework.permissions import AllowAny
 
@@ -9,6 +10,7 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 
 urlpatterns = [
+    path('', TemplateView.as_view(template_name='home.html')),
     path('admin/', admin.site.urls),
     path('api/', include('apps.chat.urls')),
     path('api/auth/', include('apps.auth_api.urls')),

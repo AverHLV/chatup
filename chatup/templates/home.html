@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ChatUP</title>
+</head>
+<body>
+    {% if request.user.is_authenticated %}
+        Logged in as {{ request.user.username }}.
+    {% else %}
+        Not logged in.
+    {% endif %}
+
+    <hr>
+
+    <ul>
+        <li><a href="/admin/">Administration</a>;</li>
+        <li><a href="/api/docs/">Swagger UI</a>.</li>
+    </ul>
+</body>
+</html>
