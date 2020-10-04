@@ -1,2 +1,2 @@
-release: apt-get install -y gettext && cd chatup && echo $CONFIG | base64 -d > ./config/config_deploy.ini && python manage.py migrate && python manage.py compilemessages && python manage.py collectstatic --noinput
+release: apt-get update -y && apt-get install -y gettext && cd chatup && echo $CONFIG | base64 -d > ./config/config_deploy.ini && python manage.py migrate && python manage.py compilemessages && python manage.py collectstatic --noinput
 web: daphne config.asgi:application --port $PORT --bind 0.0.0.0 -v2
