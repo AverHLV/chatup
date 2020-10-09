@@ -32,16 +32,3 @@ jobs:
                   CUP_CONF: config_ci_tests.ini
               run: |
                   python manage.py test --noinput --parallel
-
-    version:
-        needs: build
-        runs-on: ubuntu-latest
-
-        steps:
-            - uses: actions/checkout@v1
-
-            - name: Set version
-              working-directory: ./chatup/config
-              run: |
-                  COUNT=git rev-list HEAD --count
-                  echo __version__ = $COUNT > __init__.py
