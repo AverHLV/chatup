@@ -18,7 +18,7 @@ config.read(CONFIG_PATH)
 
 SECRET_KEY = config.get('django', 'secret_key')
 
-DEBUG = True if config.get('django', 'debug', fallback='true') == 'true' else False
+DEBUG = config.get('django', 'debug', fallback='true') == 'true'
 
 ALLOWED_HOSTS = config.get('django', 'hosts').split()
 
@@ -147,16 +147,18 @@ SESSION_COOKIE_AGE = 3600 * 12
 
 REST_API_VERSION = 'v1'
 
-REST_API_DOCS_URL = environ.get('CUP_API_DOCS_URL', None)
+REST_API_DOCS_URL = config.get('django', 'swagger_url', fallback=None)
+
+REST_API_USE_HTTPS = config.get('django', 'https', fallback='false') == 'true'
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
-SESSION_COOKIE_SAMESITE = 'None'
-CSRF_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SESSION_SAVE_EVERY_REQUEST = True
+if REST_API_USE_HTTPS:
+    CSRF_COOKIE_SAMESITE = 'None'
+    SESSION_COOKIE_SAMESITE = 'None'
+    CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SECURE = True
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'apps.pagination.CustomLimitOffsetPagination',
