@@ -6,7 +6,7 @@ on:
             - dev
 
 jobs:
-    tests:
+    build:
         runs-on: ubuntu-latest
 
         steps:
@@ -34,7 +34,7 @@ jobs:
                   python manage.py test --noinput --parallel
 
     version:
-        needs: tests
+        needs: build
         runs-on: ubuntu-latest
 
         steps:
