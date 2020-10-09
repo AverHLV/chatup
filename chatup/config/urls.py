@@ -1,3 +1,5 @@
+import config
+
 from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
@@ -17,7 +19,11 @@ urlpatterns = [
 
 if settings.DEBUG:
     schema_view = get_schema_view(
-        openapi.Info(title='ChatUP API', default_version=settings.REST_API_VERSION),
+        openapi.Info(
+            title='ChatUP API',
+            default_version=f'{settings.REST_API_VERSION}-{config.__version__}'
+        ),
+
         url=settings.REST_API_DOCS_URL,
         public=True,
         permission_classes=(AllowAny,),
