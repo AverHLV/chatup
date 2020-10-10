@@ -7,7 +7,7 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 router = DefaultRouter()
-router.register('roles', views.RoleViewSet)
+router.register(r'roles', views.RoleViewSet)
 
 urlpatterns = [
     path('general/lang/', views.LangView.as_view()),

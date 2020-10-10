@@ -1,40 +1,37 @@
-import json
-
-from channels.generic.websocket import WebsocketConsumer
-from asgiref.sync import async_to_sync
+from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 
-class ChatConsumer(WebsocketConsumer):
-    """ Basic chat consumer """
+class ChatConsumer(AsyncJsonWebsocketConsumer):
+    """
+    Async chat consumer that creates message instances in the database
+    and sends them to other room members
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.room_name = None
 
-    def connect(self) -> None:
+    async def connect(self) -> None:
         """ Enter room on connecting """
 
         self.room_name = f"chat_{self.scope['url_route']['kwargs']['name']}"
-        async_to_sync(self.channel_layer.group_add)(self.room_name, self.channel_name)
-        self.accept()
+        await self.channel_layer.group_add(self.room_name, self.channel_name)
+        await self.accept()
 
-    def disconnect(self, code) -> None:
+    async def disconnect(self, code) -> None:
         """ Leave room on disconnect """
 
-        async_to_sync(self.channel_layer.group_discard)(self.room_name, self.channel_name)
+        await self.channel_layer.group_discard(self.room_name, self.channel_name)
 
-    def receive(self, text_data=None, bytes_data=None) -> None:
-        try:
-            received_data = json.loads(text_data)
-
-        except (TypeError, json.JSONDecodeError):
-            self.send(text_data=json.dumps({'message': 'Failed to deserialize data'}))
+    async def receive_json(self, content, **kwargs) -> None:
+        if not isinstance(content, dict):
+            await self.send_json({'message': 'Invalid content'})
             return
 
-        message = {'type': 'chat_message', 'message': received_data['message']}
-        async_to_sync(self.channel_layer.group_send)(self.room_name, message)
+        event = {'type': 'chat_message', 'message': content['message']}
+        await self.channel_layer.group_send(self.room_name, event)
 
-    def chat_message(self, event: dict) -> None:
+    async def chat_message(self, event: dict) -> None:
         """ Send a message to the user if received """
 
-        self.send(text_data=json.dumps({'message': event['message']}))
+        await self.send_json({'message': event['message']})
