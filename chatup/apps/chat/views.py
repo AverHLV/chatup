@@ -17,7 +17,7 @@ def rooms(request):
 def room(request, name: str):
     """ Chat room view """
 
-    return render(request, 'room.html', {'name': name})
+    return render(request, 'room.html', {'name': name, 'use_https': settings.REST_API_USE_HTTPS})
 
 
 class LangView(APIView):
