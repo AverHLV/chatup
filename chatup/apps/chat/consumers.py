@@ -1,7 +1,26 @@
+from channels import exceptions
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 
-class ChatConsumer(AsyncJsonWebsocketConsumer):
+class AuthRequiredConsumer(AsyncJsonWebsocketConsumer):
+    """ Consumer that accepts connections only with authenticated clients """
+
+    async def check_user(self) -> None:
+        """
+        Check whether user is authenticated
+
+        :raises: DenyConnection
+        """
+
+        if not self.scope['user'].is_authenticated:
+            raise exceptions.DenyConnection('User is not authenticated')
+
+    async def connect(self) -> None:
+        await self.check_user()
+        await self.accept()
+
+
+class ChatConsumer(AuthRequiredConsumer):
     """
     Async chat consumer that creates message instances in the database
     and sends them to other room members
@@ -12,10 +31,11 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         self.room_name = None
 
     async def connect(self) -> None:
-        """ Enter room on connecting """
+        """ Enter room on connect """
 
         self.room_name = f"chat_{self.scope['url_route']['kwargs']['name']}"
         await self.channel_layer.group_add(self.room_name, self.channel_name)
+        await self.check_user()
         await self.accept()
 
     async def disconnect(self, code) -> None:
