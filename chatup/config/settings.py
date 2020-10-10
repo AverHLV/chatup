@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'drf_yasg',
+    'channels',
 
     # own apps
 
@@ -124,7 +125,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Cache
 
 if config.get('cache', 'user', fallback=None) is None:
-    location = f'redis://{config.get("cache", "host")}:{config.get("cache", "port")}/0'
+    redis_url = f'redis://{config.get("cache", "host")}:{config.get("cache", "port")}/0'
 
 else:
     user = config.get('cache', 'user')
@@ -132,12 +133,12 @@ else:
     host = config.get('cache', 'host')
     port = config.get('cache', 'port')
 
-    location = f'redis://{user}:{password}@{host}:{port}/0'
+    redis_url = f'redis://{user}:{password}@{host}:{port}/0'
 
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': location,
+        'LOCATION': redis_url,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -183,6 +184,19 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ]
+}
+
+# Channels
+
+ASGI_APPLICATION = 'config.routing.router'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            'hosts': [redis_url],
+        },
+    },
 }
 
 # Logging configuration
