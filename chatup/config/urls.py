@@ -18,6 +18,8 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
+    # add swagger ui view
+
     schema_view = get_schema_view(
         openapi.Info(
             title='ChatUP API',

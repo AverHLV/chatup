@@ -2,22 +2,9 @@ from rest_framework import mixins, viewsets
 from rest_framework.views import APIView, Response
 
 from django.conf import settings
-from django.shortcuts import render
 from drf_yasg.utils import swagger_auto_schema
 
 from . import models, serializers
-
-
-def rooms(request):
-    """ Chat rooms view """
-
-    return render(request, 'rooms.html')
-
-
-def room(request, name: str):
-    """ Chat room view """
-
-    return render(request, 'room.html', {'name': name, 'use_https': settings.REST_API_USE_HTTPS})
 
 
 class LangView(APIView):
