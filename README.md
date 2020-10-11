@@ -39,7 +39,7 @@ Log in with credentials `admin / admin` or `streamer / streamer`.
 
 ## Documentation
 
-Swagger UI available on `/api/docs`.
+Swagger UI available on `/api/docs`. All dev-needed links are available on `/dev`.
 
 ## Important CLI commands
 

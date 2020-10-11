@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
+from django.contrib.staticfiles.views import serve
 
 from rest_framework.permissions import AllowAny
 
@@ -11,14 +12,14 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 
 urlpatterns = [
-    path('', TemplateView.as_view(template_name='home.html')),
+    path('', serve, {'path': 'index.html'}),
     path('admin/', admin.site.urls),
     path('api/', include('apps.chat.urls')),
     path('api/auth/', include('apps.auth_api.urls')),
 ]
 
 if settings.DEBUG:
-    # add swagger ui view
+    # add swagger ui view and dev related links
 
     schema_view = get_schema_view(
         openapi.Info(
@@ -31,6 +32,7 @@ if settings.DEBUG:
         permission_classes=(AllowAny,),
     )
 
-    urlpatterns.append(
-        path('api/docs/', schema_view.with_ui(), name='docs')
-    )
+    urlpatterns += [
+        path('api/docs/', schema_view.with_ui(), name='docs'),
+        path('dev/', TemplateView.as_view(template_name='dev.html')),
+    ]

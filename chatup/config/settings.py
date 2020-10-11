@@ -268,5 +268,5 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
-# STATICFILES_DIRS = BASE_DIR / 'ui',
+STATICFILES_DIRS = BASE_DIR / 'ui',
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
