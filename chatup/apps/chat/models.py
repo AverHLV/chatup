@@ -3,7 +3,7 @@ from django.core import validators
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.utils.translation import gettext_lazy as _
 
-from ..abstract import NameTranslation
+from ..abstract import TimeStamped, NameTranslation
 
 ROLE_SIDS = (
     ('user', 'User'),
@@ -89,3 +89,37 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return f'{self.pk}: {self.username}'
+
+
+class Broadcast(TimeStamped):
+    """
+    User broadcast model
+
+    title: broadcast title
+    description: broadcast description
+    source_link: absolute url to the broadcast source
+    streamer: user who is streaming
+    """
+
+    title = models.CharField(unique=True, max_length=200)
+    description = models.CharField(blank=True, null=True, max_length=1000)
+
+    source_link = models.URLField(
+        verbose_name=_('source link'),
+        help_text=_('Link to broadcast source.')
+    )
+
+    streamer = models.ForeignKey(
+        CustomUser,
+        verbose_name=_('streamer'),
+        on_delete=models.PROTECT,
+        related_name='broadcasts'
+    )
+
+    class Meta:
+        db_table = 'broadcasts'
+        verbose_name = _('broadcast')
+        verbose_name_plural = _('broadcasts')
+
+    def __str__(self):
+        return f'{self.streamer.username}: {self.title[:20]}'

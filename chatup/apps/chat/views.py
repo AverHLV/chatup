@@ -1,10 +1,10 @@
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, viewsets, permissions
 from rest_framework.views import APIView, Response
 
 from django.conf import settings
 from drf_yasg.utils import swagger_auto_schema
 
-from . import models, serializers
+from . import models, serializers, permissions as own_permissions
 
 
 class LangView(APIView):
@@ -43,3 +43,12 @@ class RoleViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
 
     queryset = models.Role.objects.order_by('sid')
     serializer_class = serializers.RoleSerializer
+
+
+class BroadcastViewSet(viewsets.ModelViewSet):
+    """ User broadcasts viewset """
+
+    queryset = models.Broadcast.objects.select_related('streamer').order_by('-created')
+    serializer_class = serializers.BroadcastSerializer
+    permission_classes = permissions.IsAuthenticated, own_permissions.IsBroadcastStreamer
+    filterset_fields = 'title', 'streamer'  # 'streamer' filter means streamer id

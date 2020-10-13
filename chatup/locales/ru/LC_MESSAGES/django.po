@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-04 13:30+0300\n"
+"POT-Creation-Date: 2020-10-13 22:06+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,6 +19,14 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
 "%100>=11 && n%100<=14)? 2 : 3);\n"
+
+#: .\apps\abstract.py:8
+msgid "Creation date."
+msgstr "Дата создания."
+
+#: .\apps\abstract.py:9
+msgid "Date of last update."
+msgstr "Дата последнего обновления."
 
 #: .\apps\auth_api\serializers.py:34
 msgid "User not found by the given credentials."
@@ -40,7 +48,7 @@ msgstr "Выход прошел успешно."
 msgid "Successfully registered and logged in."
 msgstr "Регистрация и вход прошли успешно."
 
-#: .\apps\chat\admin.py:20
+#: .\apps\chat\admin.py:22
 msgid "Additional fields"
 msgstr "Дополнительные поля"
 
@@ -68,10 +76,30 @@ msgstr "пользователь"
 msgid "users"
 msgstr "пользователи"
 
-#: .\config\settings.py:193
+#: .\apps\chat\models.py:108
+msgid "source link"
+msgstr "ссылка на источник"
+
+#: .\apps\chat\models.py:109
+msgid "Link to broadcast source."
+msgstr "Ссылка на источник трансляции."
+
+#: .\apps\chat\models.py:114
+msgid "streamer"
+msgstr "стример"
+
+#: .\apps\chat\models.py:121
+msgid "broadcast"
+msgstr "трансляция"
+
+#: .\apps\chat\models.py:122
+msgid "broadcasts"
+msgstr "трансляции"
+
+#: .\config\settings.py:252
 msgid "English"
 msgstr "Английский"
 
-#: .\config\settings.py:194
+#: .\config\settings.py:253
 msgid "Russian"
 msgstr "Русский"

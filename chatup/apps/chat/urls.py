@@ -8,6 +8,7 @@ from . import views
 
 router = DefaultRouter()
 router.register(r'roles', views.RoleViewSet)
+router.register(r'broadcasts', views.BroadcastViewSet)
 
 urlpatterns = [
     path('general/lang/', views.LangView.as_view()),

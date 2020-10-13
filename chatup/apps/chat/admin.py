@@ -20,3 +20,9 @@ class CustomUserAdmin(UserAdmin):
 CustomUserAdmin.fieldsets += (_('Additional fields'), {
     'fields': ('watchtime', 'username_color', 'role')
 }),
+
+
+@admin.register(models.Broadcast)
+class BroadCastAdmin(admin.ModelAdmin):
+    list_display = 'streamer', 'title'
+    search_fields = 'title', 'source_link'
