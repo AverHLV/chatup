@@ -48,3 +48,9 @@ Run tests in parallel with preserving testing database:
 ```
 python manage.py test --keepdb --parallel
 ```
+
+Populate database with generated objects (broadcasts):
+
+```
+python manage.py create
+```
