@@ -49,7 +49,7 @@ class Command(BaseCommand):
                 title=f'Stream #{uuid4()}',
                 source_link=f'https://streams.com/stream{i}',
                 streamer=choice(streamers),
-                is_active=choice([True, False]),
+                is_active=False,
                 watchers_count=randint(0, 500)
             )
 

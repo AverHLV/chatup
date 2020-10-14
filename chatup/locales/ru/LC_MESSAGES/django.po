@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-14 20:42+0300\n"
+"POT-Creation-Date: 2020-10-14 21:25+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -119,6 +119,10 @@ msgstr "сообщение"
 #: .\apps\chat\models.py:174
 msgid "messages"
 msgstr "сообщения"
+
+#: .\apps\chat\serializers.py:48
+msgid "You can have only one active broadcast."
+msgstr "У вас может быть только одна активная трансляция."
 
 #: .\config\settings.py:252
 msgid "English"

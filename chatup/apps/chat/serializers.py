@@ -1,4 +1,7 @@
+from django.utils.translation import gettext_lazy as _
+
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from . import models
 from ..serializers import TranslatedModelSerializer
@@ -27,10 +30,24 @@ class UserPublicSerializer(UserSerializer):
 
 class BroadcastSerializer(serializers.ModelSerializer):
     streamer = UserPublicSerializer(read_only=True)
+    watchers_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = models.Broadcast
         fields = '__all__'
+
+    def validate_is_active(self, value: bool) -> bool:
+        """ Allow only one active broadcast per streamer """
+
+        if value:
+            active = models.Broadcast.objects \
+                .filter(streamer=self.context['request'].user, is_active=True) \
+                .exists()
+
+            if active:
+                raise ValidationError({'is_active': _('You can have only one active broadcast.')})
+
+        return value
 
     def validate(self, attr: dict) -> dict:
         request = self.context['request']
