@@ -1,6 +1,8 @@
 from django.core.management.base import BaseCommand, CommandError
 from random import choice, randint
 
+from uuid import uuid4
+
 from ... import models
 from ..utils import debug_required
 
@@ -43,7 +45,7 @@ class Command(BaseCommand):
 
         broadcasts = [
             models.Broadcast(
-                title=f'Stream #{i}',
+                title=f'Stream #{uuid4()}',
                 source_link=f'https://streams.com/stream{i}',
                 streamer=choice(streamers),
                 is_active=choice([True, False]),
