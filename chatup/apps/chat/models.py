@@ -98,6 +98,7 @@ class Broadcast(TimeStamped):
     title: broadcast title
     description: broadcast description
     is_active: whether broadcast is active now, False by default
+    watchers_count: number of users that watch the broadcast
     source_link: absolute url to the broadcast source
     streamer: user who is streaming
     """
@@ -105,6 +106,11 @@ class Broadcast(TimeStamped):
     title = models.CharField(unique=True, max_length=200)
     description = models.CharField(blank=True, null=True, max_length=1000)
     is_active = models.BooleanField(default=False, help_text=_('Whether broadcast is active now.'))
+
+    watchers_count = models.PositiveIntegerField(
+        default=0,
+        help_text=_('Number of users that watch the broadcast.')
+    )
 
     source_link = models.URLField(
         verbose_name=_('source link'),

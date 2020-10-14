@@ -36,7 +36,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         try:
             return models.Broadcast.objects \
                 .select_related('streamer') \
-                .get(id=self.scope['url_route']['kwargs']['id'])
+                .get(id=self.scope['url_route']['kwargs']['id'], is_active=True)
 
         except models.Broadcast.DoesNotExist:
             raise exceptions.DenyConnection('Broadcast not found')

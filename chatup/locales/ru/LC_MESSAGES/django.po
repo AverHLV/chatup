@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-14 19:26+0300\n"
+"POT-Creation-Date: 2020-10-14 20:42+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -76,43 +76,47 @@ msgstr "пользователь"
 msgid "users"
 msgstr "пользователи"
 
-#: .\apps\chat\models.py:107
+#: .\apps\chat\models.py:108
 msgid "Whether broadcast is active now."
 msgstr "Активна ли сейчас трансляция."
 
-#: .\apps\chat\models.py:110
+#: .\apps\chat\models.py:112
+msgid "Number of users that watch the broadcast."
+msgstr "Количество пользователей, которые смотрят трансляцию."
+
+#: .\apps\chat\models.py:116
 msgid "source link"
 msgstr "ссылка на источник"
 
-#: .\apps\chat\models.py:111
+#: .\apps\chat\models.py:117
 msgid "Link to broadcast source."
 msgstr "Ссылка на источник трансляции."
 
-#: .\apps\chat\models.py:116
+#: .\apps\chat\models.py:122
 msgid "streamer"
 msgstr "стример"
 
-#: .\apps\chat\models.py:123 .\apps\chat\models.py:145
+#: .\apps\chat\models.py:129 .\apps\chat\models.py:151
 msgid "broadcast"
 msgstr "трансляция"
 
-#: .\apps\chat\models.py:124
+#: .\apps\chat\models.py:130
 msgid "broadcasts"
 msgstr "трансляции"
 
-#: .\apps\chat\models.py:152
+#: .\apps\chat\models.py:158
 msgid "author"
 msgstr "автор"
 
-#: .\apps\chat\models.py:161
+#: .\apps\chat\models.py:167
 msgid "deleter"
 msgstr "тот, кто удалил сообщение"
 
-#: .\apps\chat\models.py:167
+#: .\apps\chat\models.py:173
 msgid "message"
 msgstr "сообщение"
 
-#: .\apps\chat\models.py:168
+#: .\apps\chat\models.py:174
 msgid "messages"
 msgstr "сообщения"
 
