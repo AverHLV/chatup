@@ -75,7 +75,7 @@ class BroadcastViewSet(ModelViewSetBase):
     queryset = models.Broadcast.objects.select_related('streamer').order_by('-created')
     serializer_class = serializers.BroadcastSerializer
     permission_classes = permissions.IsAuthenticated, own_permissions.IsBroadcastStreamer
-    filterset_fields = 'title', 'streamer_id'
+    filterset_fields = 'title', 'is_active', 'streamer_id'
 
     serializer_action_classes = {
         'messages': serializers.MessageSerializer,
