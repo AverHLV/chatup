@@ -70,7 +70,7 @@ class RolesTestCase(APITestCase):
 
         request = self.factory.get('roles/')
         force_authenticate(request, self.user)
-        response = views.RoleViewSet.as_view(actions={'get': 'list'})(request)
+        response = views.RoleView.as_view()(request)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['total_count'], len(self.roles))
@@ -87,7 +87,7 @@ class RolesTestCase(APITestCase):
         request = self.factory.get('roles/')
         request.COOKIES[settings.LANGUAGE_COOKIE_NAME] = settings.LANGUAGES[0][0]
         force_authenticate(request, self.user)
-        response = views.RoleViewSet.as_view(actions={'get': 'list'})(request)
+        response = views.RoleView.as_view()(request)
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['total_count'], len(self.roles))

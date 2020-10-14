@@ -7,10 +7,10 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 router = DefaultRouter()
-router.register(r'roles', views.RoleViewSet)
 router.register(r'broadcasts', views.BroadcastViewSet)
 
 urlpatterns = [
+    path('roles/', views.RoleView.as_view()),
     path('general/lang/', views.LangView.as_view()),
     path('general/user/', views.UserView.as_view()),
     *router.urls,

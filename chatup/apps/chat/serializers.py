@@ -39,3 +39,17 @@ class BroadcastSerializer(serializers.ModelSerializer):
             attr['streamer'] = request.user
 
         return attr
+
+
+class MessageSerializer(serializers.ModelSerializer):
+    author = UserPublicSerializer()
+    deleter = UserPublicSerializer()
+    is_deleted = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.Message
+        fields = '__all__'
+
+    @staticmethod
+    def get_is_deleted(obj) -> bool:
+        return obj.is_deleted

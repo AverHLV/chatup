@@ -97,12 +97,14 @@ class Broadcast(TimeStamped):
 
     title: broadcast title
     description: broadcast description
+    is_active: whether broadcast is active now, False by default
     source_link: absolute url to the broadcast source
     streamer: user who is streaming
     """
 
     title = models.CharField(unique=True, max_length=200)
     description = models.CharField(blank=True, null=True, max_length=1000)
+    is_active = models.BooleanField(default=False, help_text=_('Whether broadcast is active now.'))
 
     source_link = models.URLField(
         verbose_name=_('source link'),
@@ -120,6 +122,57 @@ class Broadcast(TimeStamped):
         db_table = 'broadcasts'
         verbose_name = _('broadcast')
         verbose_name_plural = _('broadcasts')
+        indexes = models.Index(fields=['created']),
 
     def __str__(self):
-        return f'{self.streamer.username}: {self.title[:20]}'
+        return self.title[:20]
+
+
+class Message(TimeStamped):
+    """
+    Chat message model
+
+    text: message text
+    broadcast: broadcast that this message belongs to
+    author: user that added this message
+    deleter: user that deleted this message, empty by default
+    """
+
+    text = models.CharField(max_length=500)
+
+    broadcast = models.ForeignKey(
+        Broadcast,
+        verbose_name=_('broadcast'),
+        on_delete=models.CASCADE,
+        related_name='messages'
+    )
+
+    author = models.ForeignKey(
+        CustomUser,
+        verbose_name=_('author'),
+        on_delete=models.PROTECT,
+        related_name='messages'
+    )
+
+    deleter = models.ForeignKey(
+        CustomUser,
+        blank=True,
+        null=True,
+        verbose_name=_('deleter'),
+        on_delete=models.PROTECT
+    )
+
+    class Meta:
+        db_table = 'messages'
+        verbose_name = _('message')
+        verbose_name_plural = _('messages')
+        indexes = models.Index(fields=['created']),
+
+    def __str__(self):
+        return self.text[:20]
+
+    @property
+    def is_deleted(self) -> bool:
+        """ Check whether this message is deleted """
+
+        return self.deleter_id is not None
