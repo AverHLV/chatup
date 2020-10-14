@@ -1,11 +1,7 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.db.transaction import atomic
 
-from random import choice, randint
-from uuid import uuid4
-
-from ... import models
-from ..utils import debug_required
+from ..utils import debug_required, create_broadcasts, create_messages
 
 
 class Command(BaseCommand):
@@ -38,59 +34,26 @@ class Command(BaseCommand):
             help=f'Messages number to create, {self.message_number_default} by default'
         )
 
-    def create_broadcasts(self, count: int) -> None:
-        streamers = models.CustomUser.objects.filter(role__sid=models.STREAMER_ROLE_SID)
-
-        if not len(streamers):
-            raise CommandError('No streamers in database')
-
-        broadcasts = [
-            models.Broadcast(
-                title=f'Stream #{uuid4()}',
-                source_link=f'https://streams.com/stream{i}',
-                streamer=choice(streamers),
-                is_active=False,
-                watchers_count=randint(0, 500)
-            )
-
-            for i in range(count)
-        ]
-
-        models.Broadcast.objects.bulk_create(broadcasts)
-        self.stdout.write(self.style.SUCCESS(f'{len(broadcasts)} broadcasts created successfully'))
-
-    def create_messages(self, count: int) -> None:
-        broadcasts = models.Broadcast.objects.all()
-        users = models.CustomUser.objects.all()
-        moderators = models.CustomUser.objects.filter(role__sid=models.MODER_ROLE_SID)
-
-        if not len(broadcasts) or not len(users) or not len(moderators):
-            raise CommandError('No needed data in database')
-
-        messages = [
-            models.Message(
-                text='Message text',
-                broadcast=choice(broadcasts),
-                author=choice(users),
-                deleter=choice(moderators) if i % 5 else None
-            )
-
-            for i in range(count)
-        ]
-
-        models.Message.objects.bulk_create(messages)
-        self.stdout.write(self.style.SUCCESS(f'{len(messages)} messages created successfully'))
-
     @debug_required
     @atomic
     def handle(self, *args, **options) -> None:
+        broadcasts, messages = [], []
+
         if not any(options[destination] for destination in self.dests):
-            self.create_broadcasts(self.broadcast_number_default)
-            self.create_messages(self.message_number_default)
+            broadcasts = create_broadcasts(self.broadcast_number_default)
+            messages = create_messages(self.message_number_default)
 
         else:
             if options[self.dests[0]]:
-                self.create_broadcasts(options[self.dests[0]])
+                broadcasts = create_broadcasts(options[self.dests[0]])
 
             if options[self.dests[1]]:
-                self.create_messages(options[self.dests[1]])
+                messages = create_messages(options[self.dests[1]])
+
+        if len(broadcasts):
+            self.stdout.write(
+                self.style.SUCCESS(f'{len(broadcasts)} broadcasts created successfully')
+            )
+
+        if len(messages):
+            self.stdout.write(self.style.SUCCESS(f'{len(messages)} messages created successfully'))
