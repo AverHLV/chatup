@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
-from random import choice, randint
+from django.db.transaction import atomic
 
+from random import choice, randint
 from uuid import uuid4
 
 from ... import models
@@ -81,6 +82,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'{len(messages)} messages created successfully'))
 
     @debug_required
+    @atomic
     def handle(self, *args, **options) -> None:
         if not any(options[destination] for destination in self.dests):
             self.create_broadcasts(self.broadcast_number_default)
