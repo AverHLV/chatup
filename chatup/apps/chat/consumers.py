@@ -191,7 +191,5 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def send_message(self, event: dict) -> None:
         """ Message sending point, replace event type by real type """
 
-        event['type'] = event['real_type']
-        del event['real_type']
-
+        event['type'] = event.pop('real_type')
         await self.send_json(event)
