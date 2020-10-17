@@ -89,7 +89,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             .filter(id=self.scope['broadcast'].id) \
             .update(watchers_count=F('watchers_count') - 1)
 
-    async def send_watchers_count_update(self):
+    async def send_watchers_count_update(self) -> None:
         """ Send event in case of broadcast watchers count update """
 
         event = {
