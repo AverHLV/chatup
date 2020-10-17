@@ -1,4 +1,3 @@
-from django.db.models import F
 from django.db.transaction import atomic
 from django.utils.translation import gettext as _
 
@@ -91,12 +90,19 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     @database_sync_to_async
     @atomic
     def leave_broadcast(self):
-        """ Leave broadcast on disconnecting by decreasing watchers count """
+        """
+        Leave broadcast on disconnecting by decreasing watchers count,
+        return refreshed broadcast
+        """
 
-        self.scope['broadcast'].watchers_count = models.Broadcast.objects \
+        broadcast = models.Broadcast.objects \
+            .select_related('streamer') \
             .select_for_update() \
-            .filter(id=self.scope['broadcast'].id) \
-            .update(watchers_count=F('watchers_count') - 1)
+            .get(id=self.scope['url_route']['kwargs']['id'])
+
+        broadcast.watchers_count -= 1
+        broadcast.save(update_fields=['watchers_count'])
+        return broadcast
 
     async def send_watchers_count_update(self) -> None:
         """ Send event in case of broadcast watchers count update """
@@ -124,7 +130,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         """ Leave room on disconnect """
 
         if 'broadcast' in self.scope:
-            await self.leave_broadcast()
+            self.scope['broadcast'] = await self.leave_broadcast()
             await self.send_watchers_count_update()
 
         await self.channel_layer.group_discard(self.broadcast_id, self.channel_name)
