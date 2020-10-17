@@ -24,13 +24,13 @@ CustomUserAdmin.fieldsets += (_('Additional fields'), {
 
 @admin.register(models.Broadcast)
 class BroadCastAdmin(admin.ModelAdmin):
-    list_display = 'id', 'streamer', 'title'
+    list_display = 'title', 'id', 'streamer'
     readonly_fields = 'id', 'created', 'updated'
     search_fields = 'title', 'source_link'
 
 
 @admin.register(models.Message)
 class MessageAdmin(admin.ModelAdmin):
-    list_display = 'author', 'broadcast', 'text'
+    list_display = 'text', 'id', 'author', 'broadcast'
     readonly_fields = 'id', 'created', 'updated'
     search_fields = 'text',
