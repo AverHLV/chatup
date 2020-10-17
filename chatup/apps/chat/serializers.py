@@ -67,14 +67,24 @@ class MessageSerializer(serializers.ModelSerializer):
         model = models.Message
         fields = '__all__'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.context is None:
+            return
+
+        # ws case
+
+        if isinstance(self.context['request'], dict):
+            self.fields['author'] = serializers.PrimaryKeyRelatedField(
+                queryset=models.CustomUser.objects.only('id')
+            )
+
+            self.fields['deleter'] = serializers.PrimaryKeyRelatedField(
+                required=False,
+                queryset=models.CustomUser.objects.only('id')
+            )
+
     @staticmethod
     def get_is_deleted(obj) -> bool:
         return obj.is_deleted
-
-
-class MessageWSSerializer(serializers.ModelSerializer):
-    """ Message creation serializer through websocket """
-
-    class Meta:
-        model = models.Message
-        fields = '__all__'

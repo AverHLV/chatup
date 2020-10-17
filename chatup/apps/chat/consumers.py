@@ -176,13 +176,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         content['author'] = self.scope['user'].id
         content['broadcast'] = self.scope['broadcast'].id
-        serializer = serializers.MessageWSSerializer(data=content, context={'request': self.scope})
+        serializer = serializers.MessageSerializer(data=content, context={'request': self.scope})
 
         if not serializer.is_valid():
             return None, serializer.errors
 
-        message = serializers.MessageSerializer(serializer.save()).data
-        return message, None
+        serializer.save()
+        return serializer.data, None
 
     async def send_message(self, event: dict) -> None:
         """ Group event handler: send a message to the user """
