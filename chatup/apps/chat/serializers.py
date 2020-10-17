@@ -70,3 +70,11 @@ class MessageSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_is_deleted(obj) -> bool:
         return obj.is_deleted
+
+
+class MessageWSSerializer(serializers.ModelSerializer):
+    """ Message creation serializer through websocket """
+
+    class Meta:
+        model = models.Message
+        fields = '__all__'

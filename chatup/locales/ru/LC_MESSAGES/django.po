@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-14 21:25+0300\n"
+"POT-Creation-Date: 2020-10-17 14:13+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -51,6 +51,14 @@ msgstr "Регистрация и вход прошли успешно."
 #: .\apps\chat\admin.py:20
 msgid "Additional fields"
 msgstr "Дополнительные поля"
+
+#: .\apps\chat\consumers.py:97
+msgid "Invalid message structure."
+msgstr "Неверная структура сообщения."
+
+#: .\apps\chat\consumers.py:101
+msgid "Invalid message type."
+msgstr "Неверный тип сообщения."
 
 #: .\apps\chat\models.py:35 .\apps\chat\models.py:77
 msgid "role"

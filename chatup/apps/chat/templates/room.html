@@ -7,7 +7,7 @@
 <body>
     <textarea id="chat-log" cols="100" rows="20"></textarea><br>
     <input id="chat-message-input" type="text" size="100"><br>
-    <input id="chat-message-submit" type="button" value="Send">
+    <input id="chat-create" type="button" value="Create message">
     {{ id|json_script:"room-name" }}
 
     <script>
@@ -26,8 +26,7 @@
         );
 
         chatSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            document.querySelector('#chat-log').value += (data.message + '\n');
+            document.querySelector('#chat-log').value += (e.data + '\n');
         };
 
         chatSocket.onclose = function(e) {
@@ -36,18 +35,12 @@
 
         document.querySelector('#chat-message-input').focus();
 
-        document.querySelector('#chat-message-input').onkeyup = function(e) {
-            if (e.keyCode === 13) {  // enter, return
-                document.querySelector('#chat-message-submit').click();
-            }
-        };
-
-        document.querySelector('#chat-message-submit').onclick = function(e) {
+        document.querySelector('#chat-create').onclick = function(e) {
             const messageInputDom = document.querySelector('#chat-message-input');
             const message = messageInputDom.value;
 
             chatSocket.send(JSON.stringify({
-                'message': message
+                'type': 'create_message', 'content': {'text': message}
             }));
 
             messageInputDom.value = '';
