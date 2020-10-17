@@ -1,3 +1,5 @@
+from django.db.models import F
+from django.db.transaction import atomic
 from django.utils.translation import gettext_lazy as _
 
 from channels import exceptions
@@ -13,13 +15,11 @@ class EventTypes:
     CREATE_MESSAGE = 'create_message'
     DELETE_MESSAGE = 'delete_message'
     UPDATE_WATCH_TIME = 'update_watch_time'
-    UPDATE_WATCHERS_COUNT = 'update_watchers_count'
 
     _types = (
         CREATE_MESSAGE,
         DELETE_MESSAGE,
         UPDATE_WATCH_TIME,
-        UPDATE_WATCHERS_COUNT,
     )
 
     def __contains__(self, item: str) -> bool:
@@ -56,20 +56,49 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             raise exceptions.DenyConnection('User is not authenticated')
 
     @database_sync_to_async
+    @atomic
     def get_broadcast(self):
         """
-        Get broadcast by url parameter, reject connection if not found
+        Get broadcast by url parameter, reject connection if not found,
+        else increase watchers count
 
         :raises: DenyConnection
         """
 
         try:
-            return models.Broadcast.objects \
+            broadcast = models.Broadcast.objects \
                 .select_related('streamer') \
+                .select_for_update() \
                 .get(id=self.scope['url_route']['kwargs']['id'], is_active=True)
 
         except models.Broadcast.DoesNotExist:
             raise exceptions.DenyConnection('Broadcast not found')
+
+        else:
+            broadcast.watchers_count += 1
+            broadcast.save(update_fields=['watchers_count'])
+            return broadcast
+
+    @database_sync_to_async
+    @atomic
+    def leave_broadcast(self):
+        """ Leave broadcast on disconnecting by decreasing watchers count """
+
+        self.scope['broadcast'].watchers_count = models.Broadcast.objects \
+            .select_for_update() \
+            .filter(id=self.scope['broadcast'].id) \
+            .update(watchers_count=F('watchers_count') - 1)
+
+    async def send_watchers_count_update(self):
+        """ Send event in case of broadcast watchers count update """
+
+        event = {
+            'type': 'send_message',
+            'real_type': 'update_watchers_count',
+            'content': {'watchers_count': self.scope['broadcast'].watchers_count},
+        }
+
+        await self.channel_layer.group_send(self.broadcast_id, event)
 
     async def connect(self) -> None:
         """ Enter room on connect """
@@ -80,11 +109,14 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         self.check_user()
         self.scope['broadcast'] = await self.get_broadcast()
 
+        await self.send_watchers_count_update()
         await self.accept()
 
     async def disconnect(self, code) -> None:
         """ Leave room on disconnect """
 
+        await self.leave_broadcast()
+        await self.send_watchers_count_update()
         await self.channel_layer.group_discard(self.broadcast_id, self.channel_name)
 
     async def receive_json(self, message, **kwargs) -> None:
@@ -118,7 +150,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             await self.send_json({'type': 'error', 'content': errors})
             return
 
-        event = {'type': 'send_message', 'content': message}
+        event = {
+            'type': 'send_message',
+            'real_type': self.event_types.CREATE_MESSAGE,
+            'content': message,
+        }
+
         await self.channel_layer.group_send(self.broadcast_id, event)
 
     @database_sync_to_async
@@ -139,6 +176,9 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         return message, None
 
     async def send_message(self, event: dict) -> None:
-        """ Send a message to the user if received """
+        """ Message sending point, replace event type by real type """
+
+        event['type'] = event['real_type']
+        del event['real_type']
 
         await self.send_json(event)

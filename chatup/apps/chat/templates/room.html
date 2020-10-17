@@ -33,6 +33,11 @@
             console.error('Chat socket closed unexpectedly');
         };
 
+        window.onbeforeunload = function() {
+            chatSocket.onclose = function () {}; // disable onclose handler first
+            chatSocket.close();
+        };
+
         document.querySelector('#chat-message-input').focus();
 
         document.querySelector('#chat-create').onclick = function(e) {
