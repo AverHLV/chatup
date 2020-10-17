@@ -58,7 +58,7 @@ def create_messages(count: int) -> list:
             text='Message text',
             broadcast=choice(broadcasts),
             author=choice(users),
-            deleter=choice(moderators) if i % 5 else None
+            deleter=choice(moderators) if not i % 5 else None
         )
 
         for i in range(count)
