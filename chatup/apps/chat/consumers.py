@@ -1,6 +1,6 @@
 from django.db.models import F
 from django.db.transaction import atomic
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext as _
 
 from channels import exceptions
 from channels.db import database_sync_to_async
@@ -102,8 +102,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         """ Send event in case of broadcast watchers count update """
 
         event = {
-            'type': self.event_types.SEND_MESSAGE,
-            'real_type': self.event_types.UPDATE_WATCHERS_COUNT,
+            'type': self.event_types.UPDATE_WATCHERS_COUNT,
             'content': {'watchers_count': self.scope['broadcast'].watchers_count},
         }
 
@@ -124,8 +123,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def disconnect(self, code) -> None:
         """ Leave room on disconnect """
 
-        await self.leave_broadcast()
-        await self.send_watchers_count_update()
+        if 'broadcast' in self.scope:
+            await self.leave_broadcast()
+            await self.send_watchers_count_update()
+
         await self.channel_layer.group_discard(self.broadcast_id, self.channel_name)
 
     async def receive_json(self, message, **kwargs) -> None:
@@ -145,7 +146,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         if not isinstance(message, dict) or 'type' not in message or 'content' not in message:
             response = {'type': self.event_types.ERROR, 'content': _('Invalid message structure.')}
 
-        if message['type'] not in self.event_types:
+        elif message['type'] not in self.event_types:
             response = {'type': self.event_types.ERROR, 'content':  _('Invalid message type.')}
 
         if response is None:
@@ -163,12 +164,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             await self.send_json({'type': self.event_types.ERROR, 'content': errors})
             return
 
-        event = {
-            'type': self.event_types.SEND_MESSAGE,
-            'real_type': self.event_types.CREATE_MESSAGE,
-            'content': message,
-        }
-
+        event = {'type': self.event_types.SEND_MESSAGE, 'content': message}
         await self.channel_layer.group_send(self.broadcast_id, event)
 
     @database_sync_to_async
@@ -189,7 +185,11 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         return message, None
 
     async def send_message(self, event: dict) -> None:
-        """ Message sending point, replace event type by real type """
+        """ Group event handler: send a message to the user """
 
-        event['type'] = event.pop('real_type')
+        await self.send_json(event)
+
+    async def update_watchers_count(self, event: dict) -> None:
+        """ Group event handler: send new 'watchers_count' value """
+
         await self.send_json(event)
