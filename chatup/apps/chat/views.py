@@ -1,4 +1,4 @@
-from rest_framework import generics, viewsets, permissions, status
+from rest_framework import generics, viewsets, permissions
 from rest_framework.views import APIView, Response
 from rest_framework.decorators import action
 
