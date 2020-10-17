@@ -23,7 +23,13 @@ class EventTypes:
     )
 
     def __contains__(self, item: str) -> bool:
-        assert isinstance(item, str), 'Item should a string'
+        """
+        Check that item is an allowed event type
+
+        :raises: AssertionError
+        """
+
+        assert isinstance(item, str), 'Item should be a string'
         return item in self._types
 
 
