@@ -88,3 +88,12 @@ class MessageSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_is_deleted(obj) -> bool:
         return obj.is_deleted
+
+    def validate(self, attrs: dict) -> dict:
+        # restore fields in ws case
+
+        if self.context is not None and isinstance(self.context['request'], dict):
+            self.fields['author'] = UserPublicSerializer()
+            self.fields['deleter'] = UserPublicSerializer()
+
+        return attrs
