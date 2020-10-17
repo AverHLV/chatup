@@ -1,4 +1,4 @@
-from rest_framework import generics, viewsets, permissions
+from rest_framework import generics, viewsets, permissions, status
 from rest_framework.views import APIView, Response
 from rest_framework.decorators import action
 
@@ -74,7 +74,13 @@ class BroadcastViewSet(ModelViewSetBase):
 
     queryset = models.Broadcast.objects.select_related('streamer').order_by('-created')
     serializer_class = serializers.BroadcastSerializer
-    permission_classes = permissions.IsAuthenticated, own_permissions.IsBroadcastStreamer
+
+    permission_classes = (
+        permissions.IsAuthenticated,
+        own_permissions.IsBroadcastStreamer,
+        own_permissions.IsBroadcastInactive,
+    )
+
     filterset_fields = 'title', 'is_active', 'streamer_id'
 
     serializer_action_classes = {

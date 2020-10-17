@@ -14,3 +14,10 @@ class IsBroadcastStreamer(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         return request.user.is_superuser or request.user.id == obj.streamer_id \
             if request.method not in SAFE_METHODS else True
+
+
+class IsBroadcastInactive(permissions.BasePermission):
+    """ Only inactive broadcasts can be deleted """
+
+    def has_object_permission(self, request, view, obj):
+        return not obj.is_active if request.method == 'DELETE' else True
