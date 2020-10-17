@@ -10,11 +10,20 @@ from . import models, serializers
 
 
 class EventTypes:
-    """ Allowed input event types container """
+    """ Allowed event types container """
+
+    # input types
 
     CREATE_MESSAGE = 'create_message'
     DELETE_MESSAGE = 'delete_message'
     UPDATE_WATCH_TIME = 'update_watch_time'
+
+    # other
+
+    ERROR = 'error'
+    SEND_MESSAGE = 'send_message'
+    CLOSE_BROADCAST = 'close_broadcast'
+    UPDATE_WATCHERS_COUNT = 'update_watchers_count'
 
     _types = (
         CREATE_MESSAGE,
@@ -93,8 +102,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         """ Send event in case of broadcast watchers count update """
 
         event = {
-            'type': 'send_message',
-            'real_type': 'update_watchers_count',
+            'type': self.event_types.SEND_MESSAGE,
+            'real_type': self.event_types.UPDATE_WATCHERS_COUNT,
             'content': {'watchers_count': self.scope['broadcast'].watchers_count},
         }
 
@@ -131,15 +140,19 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def is_valid(self, message: dict) -> bool:
         """ Validate basic structure of received WS message """
 
+        response = None
+
         if not isinstance(message, dict) or 'type' not in message or 'content' not in message:
-            await self.send_json({'type': 'error', 'content': _('Invalid message structure.')})
-            return False
+            response = {'type': self.event_types.ERROR, 'content': _('Invalid message structure.')}
 
         if message['type'] not in self.event_types:
-            await self.send_json({'type': 'error', 'content':  _('Invalid message type.')})
-            return False
+            response = {'type': self.event_types.ERROR, 'content':  _('Invalid message type.')}
 
-        return True
+        if response is None:
+            return True
+
+        await self.send_json(response)
+        return False
 
     async def create_message(self, content: dict) -> None:
         """ 'create_message' type handler """
@@ -147,11 +160,11 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         message, errors = await self._create_message(content)
 
         if errors is not None:
-            await self.send_json({'type': 'error', 'content': errors})
+            await self.send_json({'type': self.event_types.ERROR, 'content': errors})
             return
 
         event = {
-            'type': 'send_message',
+            'type': self.event_types.SEND_MESSAGE,
             'real_type': self.event_types.CREATE_MESSAGE,
             'content': message,
         }
