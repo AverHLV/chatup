@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-18 14:50+0300\n"
+"POT-Creation-Date: 2020-10-18 16:35+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -135,6 +135,10 @@ msgstr "сообщения"
 #: .\apps\chat\serializers.py:47
 msgid "You can have only one active broadcast."
 msgstr "У вас может быть только одна активная трансляция."
+
+#: .\apps\chat\views.py:149
+msgid "This broadcast is inactive."
+msgstr "Эта трансляция неактивна."
 
 #: .\config\settings.py:252
 msgid "English"

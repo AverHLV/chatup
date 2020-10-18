@@ -1,7 +1,8 @@
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 from django.utils.translation import get_language_from_request
 
-from rest_framework import generics, viewsets, permissions
+from rest_framework import generics, viewsets, permissions, status
 from rest_framework.views import APIView, Response
 from rest_framework.decorators import action
 
@@ -142,6 +143,13 @@ class BroadcastViewSet(ModelViewSetBase):
         """ Get broadcast watchers, grouped by roles """
 
         broadcast = self.get_object()
+
+        if not broadcast.is_active:
+            return Response(
+                {'detail': _('This broadcast is inactive.')},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         users = broadcast.watchers.select_related('role').distinct().all()
 
         lang = get_language_from_request(request)
