@@ -1,6 +1,5 @@
 from django.conf import settings
-from django.utils.translation import gettext_lazy as _
-from django.utils.translation import get_language_from_request
+from django.utils.translation import get_language_from_request, gettext_lazy as _
 
 from rest_framework import generics, viewsets, permissions, status
 from rest_framework.views import APIView, Response
@@ -117,7 +116,7 @@ class BroadcastViewSet(ModelViewSetBase):
     }
 
     action_filterset_fields = {
-        'messages': ['author_id'],
+        'messages': ('author_id',),
     }
 
     @swagger_auto_schema(manual_parameters=[author_param])
