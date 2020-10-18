@@ -16,9 +16,9 @@ urlpatterns = [
     *router.urls,
 ]
 
-if settings.DEBUG:
-    # add websocket pages
+# add websocket pages
 
+if settings.DEBUG:
     urlpatterns += [
         path('ws/rooms/', TemplateView.as_view(template_name='rooms.html'), name='rooms'),
 

@@ -5,8 +5,8 @@ from rest_framework import generics, viewsets, permissions, status
 from rest_framework.views import APIView, Response
 from rest_framework.decorators import action
 
-from drf_yasg import openapi
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg2 import openapi
+from drf_yasg2.utils import swagger_auto_schema
 
 from itertools import groupby
 from operator import attrgetter
@@ -99,13 +99,7 @@ class BroadcastViewSet(ModelViewSetBase):
 
     queryset = models.Broadcast.objects.select_related('streamer').order_by('-created')
     serializer_class = serializers.BroadcastSerializer
-
-    permission_classes = (
-        own_permissions.IsAuthenticatedOrGET,
-        own_permissions.IsBroadcastStreamer,
-        own_permissions.IsBroadcastInactive,
-    )
-
+    permission_classes = permissions.IsAuthenticatedOrReadOnly, own_permissions.IsBroadcastStreamer
     filterset_fields = 'title', 'is_active', 'streamer_id'
 
     serializer_action_classes = {
@@ -116,6 +110,18 @@ class BroadcastViewSet(ModelViewSetBase):
     action_filterset_fields = {
         'messages': ('author_id',),
     }
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        if instance.is_active:
+            return Response(
+                {'detail': _('Only inactive broadcasts can be deleted.')},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @swagger_auto_schema(manual_parameters=[author_param])
     @action(methods=['GET'], detail=True, permission_classes=[permissions.IsAuthenticated])

@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import status, permissions
 from rest_framework.views import APIView, Response
 
-from drf_yasg.utils import swagger_auto_schema
+from drf_yasg2.utils import swagger_auto_schema
 
 from . import serializers
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-10-18 16:35+0300\n"
+"POT-Creation-Date: 2020-10-19 00:02+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -56,11 +56,11 @@ msgstr "Дополнительные поля"
 msgid "watcher"
 msgstr "зритель"
 
-#: .\apps\chat\consumers.py:163
+#: .\apps\chat\consumers.py:181
 msgid "Invalid message structure."
 msgstr "Неверная структура сообщения."
 
-#: .\apps\chat\consumers.py:166
+#: .\apps\chat\consumers.py:184
 msgid "Invalid message type."
 msgstr "Неверный тип сообщения."
 
@@ -136,14 +136,18 @@ msgstr "сообщения"
 msgid "You can have only one active broadcast."
 msgstr "У вас может быть только одна активная трансляция."
 
-#: .\apps\chat\views.py:149
+#: .\apps\chat\views.py:119
+msgid "Only inactive broadcasts can be deleted."
+msgstr "Удалять можно только неактивные трансляции."
+
+#: .\apps\chat\views.py:152
 msgid "This broadcast is inactive."
 msgstr "Эта трансляция неактивна."
 
-#: .\config\settings.py:252
+#: .\config\settings.py:253
 msgid "English"
 msgstr "Английский"
 
-#: .\config\settings.py:253
+#: .\config\settings.py:254
 msgid "Russian"
 msgstr "Русский"
