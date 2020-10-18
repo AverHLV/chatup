@@ -76,7 +76,7 @@ class BroadcastViewSet(ModelViewSetBase):
     serializer_class = serializers.BroadcastSerializer
 
     permission_classes = (
-        permissions.IsAuthenticated,
+        own_permissions.IsAuthenticatedOrGET,
         own_permissions.IsBroadcastStreamer,
         own_permissions.IsBroadcastInactive,
     )

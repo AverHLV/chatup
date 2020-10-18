@@ -4,6 +4,13 @@ from rest_framework.permissions import SAFE_METHODS
 from .models import STREAMER_ROLE_SID
 
 
+class IsAuthenticatedOrGET(permissions.IsAuthenticated):
+    """ Allow GET requests for unauthorized users """
+
+    def has_permission(self, request, view):
+        return True if request.method == 'GET' else super().has_permission(request, view)
+
+
 class IsBroadcastStreamer(permissions.BasePermission):
     """ Allow unsafe requests only for superusers or broadcast streamers """
 
