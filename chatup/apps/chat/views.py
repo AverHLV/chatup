@@ -3,20 +3,42 @@ from rest_framework.views import APIView, Response
 from rest_framework.decorators import action
 
 from django.conf import settings
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from . import models, serializers, permissions as own_permissions
+
+author_param = openapi.Parameter(
+    'author_id',
+    openapi.IN_QUERY,
+    type=openapi.TYPE_INTEGER,
+    description='Author filter'
+)
 
 
 class ModelViewSetBase(viewsets.ModelViewSet):
     """ Custom viewset with a couple of helpers """
 
     serializer_action_classes: dict = {}
+    action_filterset_fields: dict = {}
 
     def get_serializer_class(self):
         """ Look for serializer class in actions dictionary first """
 
         return self.serializer_action_classes.get(self.action) or super().get_serializer_class()
+
+    def get_filters(self, request) -> dict:
+        """ Build filters for custom actions """
+
+        filters = {}
+
+        for field in self.action_filterset_fields[self.action]:
+            value = request.query_params.get(field, None)
+
+            if value is not None:
+                filters[field] = value
+
+        return filters
 
     def list_response(self, queryset):
         """ List action for custom queryset """
@@ -87,15 +109,24 @@ class BroadcastViewSet(ModelViewSetBase):
         'messages': serializers.MessageSerializer,
     }
 
+    action_filterset_fields = {
+        'messages': ['author_id'],
+    }
+
+    @swagger_auto_schema(manual_parameters=[author_param])
     @action(methods=['GET'], detail=True, permission_classes=[permissions.IsAuthenticated])
     def messages(self, request, pk):
         """ Get messages from specific broadcast """
 
         self.get_object()
+        filters = self.get_filters(request)
 
         queryset = models.Message.objects \
             .filter(broadcast_id=pk) \
             .select_related('author', 'deleter') \
             .order_by('-created')
+
+        if len(filters):
+            queryset = queryset.filter(**filters)
 
         return self.list_response(queryset)
