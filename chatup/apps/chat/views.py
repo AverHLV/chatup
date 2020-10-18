@@ -149,8 +149,7 @@ class BroadcastViewSet(ModelViewSetBase):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        users = broadcast.watchers.select_related('role').distinct().all()
-
+        users = broadcast.watchers.select_related('role').distinct()
         lang = get_language_from_request(request)
         key = f'role.name_{lang}' if lang != settings.LANGUAGES[0][0] else 'role.name'
 

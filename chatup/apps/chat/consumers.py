@@ -83,10 +83,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             raise exceptions.DenyConnection('Broadcast not found')
 
         else:
-            watchers_count_old = broadcast.watchers.distinct().count()
+            watchers = list(broadcast.watchers.only('id').distinct().values_list('id', flat=True))
             models.BroadcastToUser.objects.create(broadcast=broadcast, user=self.scope['user'])
-            watchers_count = broadcast.watchers.distinct().count()
-            return broadcast, watchers_count if watchers_count != watchers_count_old else None
+            count = None if self.scope['user'].id in watchers else len(watchers) + 1
+            return broadcast, count
 
     @database_sync_to_async
     @atomic
@@ -101,15 +101,14 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             .select_for_update() \
             .get(id=self.scope['broadcast'].id)
 
-        watchers_count_old = broadcast.watchers.distinct().count()
-
         models.BroadcastToUser.objects \
-            .filter(broadcast=broadcast, user=self.scope['user']) \
+            .filter(broadcast_id=broadcast.id, user_id=self.scope['user'].id) \
             .first() \
             .delete()
 
-        watchers_count = broadcast.watchers.distinct().count()
-        return broadcast, watchers_count if watchers_count != watchers_count_old else None
+        watchers = broadcast.watchers.only('id').distinct().values_list('id', flat=True)
+        count = None if self.scope['user'].id in watchers else len(watchers)
+        return broadcast, count
 
     async def send_watchers_count_update(self, watchers_count: (int, None)) -> None:
         """ Send event in case of broadcast watchers count update """
