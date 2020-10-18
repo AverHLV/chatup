@@ -98,19 +98,14 @@ class Broadcast(TimeStamped):
     title: broadcast title
     description: broadcast description
     is_active: whether broadcast is active now, False by default
-    watchers_count: number of users that watch the broadcast
     source_link: absolute url to the broadcast source
     streamer: user who is streaming
+    watchers: users that watch the broadcast
     """
 
     title = models.CharField(unique=True, max_length=200)
     description = models.CharField(blank=True, null=True, max_length=1000)
     is_active = models.BooleanField(default=False, help_text=_('Whether broadcast is active now.'))
-
-    watchers_count = models.PositiveIntegerField(
-        default=0,
-        help_text=_('Number of users that watch the broadcast.')
-    )
 
     source_link = models.URLField(
         verbose_name=_('source link'),
@@ -124,6 +119,12 @@ class Broadcast(TimeStamped):
         related_name='broadcasts'
     )
 
+    watchers = models.ManyToManyField(
+        CustomUser,
+        through='BroadcastToUser',
+        verbose_name=_('watchers')
+    )
+
     class Meta:
         db_table = 'broadcasts'
         verbose_name = _('broadcast')
@@ -132,6 +133,16 @@ class Broadcast(TimeStamped):
 
     def __str__(self):
         return self.title[:20]
+
+
+class BroadcastToUser(models.Model):
+    """ Custom many-to-many model that allows multiple relationships """
+
+    broadcast = models.ForeignKey(Broadcast, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
+
+    class Meta:
+        db_table = 'broadcasts_to_users'
 
 
 class Message(TimeStamped):

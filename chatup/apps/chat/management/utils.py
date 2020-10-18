@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.core.management.base import CommandError
 
-from random import choice, randint
+from random import choice
 from uuid import uuid4
 
 from .. import models
@@ -34,8 +34,7 @@ def create_broadcasts(count: int) -> list:
             title=f'Stream #{uuid4()}',
             source_link=f'https://streams.com/stream{i}',
             streamer=choice(streamers),
-            is_active=False,
-            watchers_count=randint(0, 500)
+            is_active=False
         )
 
         for i in range(count)

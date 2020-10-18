@@ -22,11 +22,17 @@ CustomUserAdmin.fieldsets += (_('Additional fields'), {
 }),
 
 
+class WatchersInline(admin.TabularInline):
+    model = models.Broadcast.watchers.through
+    verbose_name = _('watcher')
+
+
 @admin.register(models.Broadcast)
 class BroadCastAdmin(admin.ModelAdmin):
     list_display = 'title', 'id', 'streamer'
     readonly_fields = 'id', 'created', 'updated'
     search_fields = 'title', 'source_link'
+    inlines = WatchersInline,
 
 
 @admin.register(models.Message)

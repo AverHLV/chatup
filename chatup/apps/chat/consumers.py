@@ -65,10 +65,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     @atomic
-    def get_broadcast(self):
+    def get_broadcast(self) -> tuple:
         """
-        Get broadcast by url parameter, reject connection if not found,
-        else increase watchers count
+        Get broadcast and watchers count by url parameter, reject connection if not found,
+        else add current user as a watcher
 
         :raises: DenyConnection
         """
@@ -83,33 +83,43 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             raise exceptions.DenyConnection('Broadcast not found')
 
         else:
-            broadcast.watchers_count += 1
-            broadcast.save(update_fields=['watchers_count'])
-            return broadcast
+            watchers_count_old = broadcast.watchers.distinct().count()
+            models.BroadcastToUser.objects.create(broadcast=broadcast, user=self.scope['user'])
+            watchers_count = broadcast.watchers.distinct().count()
+            return broadcast, watchers_count if watchers_count != watchers_count_old else None
 
     @database_sync_to_async
     @atomic
     def leave_broadcast(self):
         """
-        Leave broadcast on disconnecting by decreasing watchers count,
-        return refreshed broadcast
+        Leave broadcast on disconnecting by removing current user from watchers,
+        returns refreshed broadcast and watchers count
         """
 
         broadcast = models.Broadcast.objects \
             .select_related('streamer') \
             .select_for_update() \
-            .get(id=self.scope['url_route']['kwargs']['id'])
+            .get(id=self.scope['broadcast'].id)
 
-        broadcast.watchers_count -= 1
-        broadcast.save(update_fields=['watchers_count'])
-        return broadcast
+        watchers_count_old = broadcast.watchers.distinct().count()
 
-    async def send_watchers_count_update(self) -> None:
+        models.BroadcastToUser.objects \
+            .filter(broadcast=broadcast, user=self.scope['user']) \
+            .first() \
+            .delete()
+
+        watchers_count = broadcast.watchers.distinct().count()
+        return broadcast, watchers_count if watchers_count != watchers_count_old else None
+
+    async def send_watchers_count_update(self, watchers_count: (int, None)) -> None:
         """ Send event in case of broadcast watchers count update """
+
+        if watchers_count is None:
+            return
 
         event = {
             'type': self.event_types.UPDATE_WATCHERS_COUNT,
-            'content': {'watchers_count': self.scope['broadcast'].watchers_count},
+            'content': {'watchers_count': watchers_count},
         }
 
         await self.channel_layer.group_send(self.broadcast_id, event)
@@ -121,17 +131,17 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_add(self.broadcast_id, self.channel_name)
 
         self.check_user()
-        self.scope['broadcast'] = await self.get_broadcast()
+        self.scope['broadcast'], watchers_count = await self.get_broadcast()
 
-        await self.send_watchers_count_update()
+        await self.send_watchers_count_update(watchers_count)
         await self.accept()
 
     async def disconnect(self, code) -> None:
         """ Leave room on disconnect """
 
         if 'broadcast' in self.scope:
-            self.scope['broadcast'] = await self.leave_broadcast()
-            await self.send_watchers_count_update()
+            self.scope['broadcast'], watchers_count = await self.leave_broadcast()
+            await self.send_watchers_count_update(watchers_count)
 
         await self.channel_layer.group_discard(self.broadcast_id, self.channel_name)
 

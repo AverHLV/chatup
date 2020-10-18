@@ -30,11 +30,10 @@ class UserPublicSerializer(UserSerializer):
 
 class BroadcastSerializer(serializers.ModelSerializer):
     streamer = UserPublicSerializer(read_only=True)
-    watchers_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = models.Broadcast
-        fields = '__all__'
+        exclude = 'watchers',
 
     def validate_is_active(self, value: bool) -> bool:
         """ Allow only one active broadcast per streamer """
