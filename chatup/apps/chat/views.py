@@ -1,10 +1,15 @@
+from django.conf import settings
+from django.utils.translation import get_language_from_request
+
 from rest_framework import generics, viewsets, permissions
 from rest_framework.views import APIView, Response
 from rest_framework.decorators import action
 
-from django.conf import settings
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
+
+from itertools import groupby
+from operator import attrgetter
 
 from . import models, serializers, permissions as own_permissions
 
@@ -107,6 +112,7 @@ class BroadcastViewSet(ModelViewSetBase):
 
     serializer_action_classes = {
         'messages': serializers.MessageSerializer,
+        'watchers': serializers.UserPublicSerializer,
     }
 
     action_filterset_fields = {
@@ -130,3 +136,20 @@ class BroadcastViewSet(ModelViewSetBase):
             queryset = queryset.filter(**filters)
 
         return self.list_response(queryset)
+
+    @action(methods=['GET'], detail=True, permission_classes=[permissions.IsAuthenticated])
+    def watchers(self, request, pk):
+        """ Get broadcast watchers, grouped by roles """
+
+        broadcast = self.get_object()
+        users = broadcast.watchers.select_related('role').distinct().all()
+
+        lang = get_language_from_request(request)
+        key = f'role.name_{lang}' if lang != settings.LANGUAGES[0][0] else 'role.name'
+
+        return Response({
+            'result': {
+                key: self.get_serializer(group, many=True).data
+                for key, group in groupby(users, key=attrgetter(key))
+            }
+        })
