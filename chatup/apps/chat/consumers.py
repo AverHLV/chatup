@@ -70,6 +70,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         Get broadcast and watchers count by url parameter, reject connection if not found,
         else add current user as a watcher
 
+        :return: broadcast object, distinct count, whether to sent event (bool)
         :raises: DenyConnection
         """
 
@@ -85,8 +86,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         else:
             watchers = list(broadcast.watchers.only('id').distinct().values_list('id', flat=True))
             models.BroadcastToUser.objects.create(broadcast=broadcast, user=self.scope['user'])
-            count = None if self.scope['user'].id in watchers else len(watchers) + 1
-            return broadcast, count
+
+            if self.scope['user'].id in watchers:
+                count, send_to_group = len(watchers), False
+            else:
+                count, send_to_group = len(watchers) + 1, True
+
+            return broadcast, count, send_to_group
 
     @database_sync_to_async
     @atomic
@@ -94,6 +100,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         """
         Leave broadcast on disconnecting by removing current user from watchers,
         returns refreshed broadcast and watchers count
+
+        :return: broadcast object, distinct count, whether to sent event (bool)
         """
 
         broadcast = models.Broadcast.objects \
@@ -108,9 +116,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         watchers = broadcast.watchers.only('id').distinct().values_list('id', flat=True)
         count = None if self.scope['user'].id in watchers else len(watchers)
-        return broadcast, count
+        return broadcast, count, True
 
-    async def send_watchers_count_update(self, watchers_count: (int, None)) -> None:
+    async def send_watchers_count_update(
+            self,
+            watchers_count: (int, None),
+            send_to_group: bool
+    ) -> None:
         """ Send event in case of broadcast watchers count update """
 
         if watchers_count is None:
@@ -121,7 +133,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             'content': {'watchers_count': watchers_count},
         }
 
-        await self.channel_layer.group_send(self.broadcast_id, event)
+        if send_to_group:
+            await self.channel_layer.group_send(self.broadcast_id, event)
+        else:
+            await self.update_watchers_count(event)
 
     async def connect(self) -> None:
         """ Enter room on connect """
@@ -130,17 +145,17 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_add(self.broadcast_id, self.channel_name)
 
         self.check_user()
-        self.scope['broadcast'], watchers_count = await self.get_broadcast()
+        self.scope['broadcast'], watchers_count, send_to_group = await self.get_broadcast()
 
-        await self.send_watchers_count_update(watchers_count)
         await self.accept()
+        await self.send_watchers_count_update(watchers_count, send_to_group)
 
     async def disconnect(self, code) -> None:
         """ Leave room on disconnect """
 
         if 'broadcast' in self.scope:
-            self.scope['broadcast'], watchers_count = await self.leave_broadcast()
-            await self.send_watchers_count_update(watchers_count)
+            self.scope['broadcast'], watchers_count, send_to_group = await self.leave_broadcast()
+            await self.send_watchers_count_update(watchers_count, send_to_group)
 
         await self.channel_layer.group_discard(self.broadcast_id, self.channel_name)
 
