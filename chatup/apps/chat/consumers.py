@@ -83,16 +83,15 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         except models.Broadcast.DoesNotExist:
             raise exceptions.DenyConnection('Broadcast not found')
 
+        watchers = list(broadcast.watchers.values_list('id', flat=True).distinct())
+        models.BroadcastToUser.objects.create(broadcast=broadcast, user=self.scope['user'])
+
+        if self.scope['user'].id in watchers:
+            count, send_to_group = len(watchers), False
         else:
-            watchers = list(broadcast.watchers.values_list('id', flat=True).distinct())
-            models.BroadcastToUser.objects.create(broadcast=broadcast, user=self.scope['user'])
+            count, send_to_group = len(watchers) + 1, True
 
-            if self.scope['user'].id in watchers:
-                count, send_to_group = len(watchers), False
-            else:
-                count, send_to_group = len(watchers) + 1, True
-
-            return broadcast, count, send_to_group
+        return broadcast, count, send_to_group
 
     @database_sync_to_async
     @atomic
@@ -123,7 +122,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             watchers_count: (int, None),
             send_to_group: bool
     ) -> None:
-        """ Send event in case of broadcast watchers count update """
+        """
+        Send event in case of broadcast watchers count update
+
+        :param watchers_count: count of broadcast watchers, return immediately if None
+        :param send_to_group: whether to send watchers count update event to a group
+        """
 
         if watchers_count is None:
             return
