@@ -84,7 +84,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             raise exceptions.DenyConnection('Broadcast not found')
 
         else:
-            watchers = list(broadcast.watchers.only('id').distinct().values_list('id', flat=True))
+            watchers = list(broadcast.watchers.values_list('id', flat=True).distinct())
             models.BroadcastToUser.objects.create(broadcast=broadcast, user=self.scope['user'])
 
             if self.scope['user'].id in watchers:
@@ -114,7 +114,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             .first() \
             .delete()
 
-        watchers = broadcast.watchers.only('id').distinct().values_list('id', flat=True)
+        watchers = broadcast.watchers.values_list('id', flat=True).distinct()
         count = None if self.scope['user'].id in watchers else len(watchers)
         return broadcast, count, True
 

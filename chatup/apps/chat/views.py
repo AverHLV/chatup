@@ -77,8 +77,6 @@ class LangView(APIView):
 class UserView(APIView):
     """ Get current user info """
 
-    # noinspection PyTypeChecker
-
     @swagger_auto_schema(responses={'200': serializers.UserSerializer})
     def get(self, request):
         serializer = serializers.UserSerializer(
