@@ -7,7 +7,7 @@ from uuid import uuid4
 from .. import models
 
 
-def debug_required(handler) -> None:
+def debug_required(handler) -> callable:
     """
     Check debug mode decorator
 

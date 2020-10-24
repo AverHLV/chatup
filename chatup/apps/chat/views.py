@@ -25,7 +25,7 @@ class ModelViewSetBase(viewsets.ModelViewSet):
     """ Custom viewset with a couple of helpers """
 
     serializer_action_classes: dict = {}
-    action_filterset_fields: dict = {}
+    filterset_action_fields: dict = {}
 
     def get_serializer_class(self):
         """ Look for serializer class in actions dictionary first """
@@ -37,7 +37,7 @@ class ModelViewSetBase(viewsets.ModelViewSet):
 
         filters = {}
 
-        for field in self.action_filterset_fields[self.action]:
+        for field in self.filterset_action_fields[self.action]:
             value = request.query_params.get(field, None)
 
             if value is not None:
@@ -107,7 +107,7 @@ class BroadcastViewSet(ModelViewSetBase):
         'watchers': serializers.UserPublicSerializer,
     }
 
-    action_filterset_fields = {
+    filterset_action_fields = {
         'messages': ('author_id',),
     }
 

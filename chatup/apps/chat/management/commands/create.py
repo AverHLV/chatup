@@ -11,7 +11,6 @@ class Command(BaseCommand):
     requires_migrations_checks = True
 
     dests = ['broadcasts', 'messages']
-
     broadcast_number_default: int = 10
     message_number_default: int = 20
 
