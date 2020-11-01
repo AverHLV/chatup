@@ -157,14 +157,18 @@ REST_API_DOCS_URL = config.get('django', 'swagger_url', fallback=None)
 
 REST_API_USE_HTTPS = config.get('django', 'https', fallback='false') == 'true'
 
+'''
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+'''
 
 if REST_API_USE_HTTPS:
+    '''
     CSRF_COOKIE_SAMESITE = 'None'
     SESSION_COOKIE_SAMESITE = 'None'
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
+    '''
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'apps.pagination.CustomLimitOffsetPagination',
