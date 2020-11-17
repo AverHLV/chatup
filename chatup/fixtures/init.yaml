@@ -8,19 +8,26 @@
 - model: chat.Role
   pk: 2
   fields:
+      sid: vip
+      name: VIP
+      name_ru: ВИП
+
+- model: chat.Role
+  pk: 3
+  fields:
       sid: moderator
       name: Moderator
       name_ru: Модератор
 
 - model: chat.Role
-  pk: 3
+  pk: 4
   fields:
       sid: administrator
       name: Administrator
       name_ru: Администратор
 
 - model: chat.Role
-  pk: 4
+  pk: 5
   fields:
       sid: streamer
       name: Streamer
@@ -39,33 +46,43 @@
 - model: chat.CustomUser
   pk: 2
   fields:
+      username: vip
+      password: 'pbkdf2_sha256$216000$nlLQP08p84Mo$VObvSRl0B61heF8iunOqh6CE1g8tCAjkb6lxFxgTghU=' # vip
+      email: vip@example.com
+      watchtime: 18000
+      username_color: 'E8303B'
+      role: 2
+
+- model: chat.CustomUser
+  pk: 3
+  fields:
       username: moderator
       password: 'pbkdf2_sha256$216000$JQaqhUD11zKY$I+Eru0OLiWxs789oYnMSGtiobIxemTwo12MLjoZPGXI=' # moderator
       email: moderator@example.com
       watchtime: 18000
       username_color: '137CB0'
-      role: 2
+      role: 3
 
 - model: chat.CustomUser
-  pk: 3
+  pk: 4
   fields:
       username: admin
       password: 'pbkdf2_sha256$216000$XiMVUojsqDp9$8ugoueeup2DlCNFW665khJ93ZeYvU6Hd67YKOoS7u6I=' # admin
       email: admin@example.com
       watchtime: 36000
       username_color: '5AB013'
-      role: 3
+      role: 4
       is_staff: True
       is_superuser: True
 
 - model: chat.CustomUser
-  pk: 4
+  pk: 5
   fields:
       username: streamer
       password: 'pbkdf2_sha256$216000$pjMWUheYVfOp$dlFsDH7vCd0IKD0wEernwqhkFBAmqdi6Jl9HZgp8C18=' # streamer
       email: streamer@example.com
       watchtime: 0
       username_color: 'E53F1B'
-      role: 4
+      role: 5
       is_staff: True
       is_superuser: True

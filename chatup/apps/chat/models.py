@@ -7,15 +7,17 @@ from ..abstract import TimeStamped, NameTranslation
 
 ROLE_SIDS = (
     ('user', 'User'),
+    ('vip', 'VIP'),
     ('moderator', 'Moderator'),
     ('administrator', 'Administrator'),
     ('streamer', 'Streamer'),
 )
 
 USER_ROLE_SID = ROLE_SIDS[0][0]
-MODER_ROLE_SID = ROLE_SIDS[1][0]
-ADMIN_ROLE_SID = ROLE_SIDS[2][0]
-STREAMER_ROLE_SID = ROLE_SIDS[3][0]
+VIP_ROLE_SID = ROLE_SIDS[1][0]
+MODER_ROLE_SID = ROLE_SIDS[2][0]
+ADMIN_ROLE_SID = ROLE_SIDS[3][0]
+STREAMER_ROLE_SID = ROLE_SIDS[4][0]
 
 USER_DEFAULT_ROLE_ID = 1
 
