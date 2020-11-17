@@ -23,6 +23,15 @@ class Command(BaseCommand):
             help='Schema name for dropping, "public" by default'
         )
 
+        parser.add_argument(
+            '-nc',
+            '--noconfirm',
+            type=bool,
+            default=False,
+            dest='noconfirm',
+            help='Disable confirmation dialog'
+        )
+
     @debug_required
     def handle(self, *args, **options) -> None:
         info = settings.DATABASES[DEFAULT_DB_ALIAS]
@@ -31,15 +40,17 @@ class Command(BaseCommand):
             raise CommandError('This command can be used only with PostgreSQL')
 
         schema = options['schema']
+        noconfirm = options['noconfirm']
 
-        confirmation = input(
-            f'All data from "{schema}" schema in default database will be lost. '
-            f'Are you sure? [y/N] '
-        )
+        if not noconfirm:
+            confirmation = input(
+                f'All data from "{schema}" schema in default database will be lost. '
+                f'Are you sure? [y/N] '
+            )
 
-        if confirmation != 'y':
-            self.stdout.write(self.style.SUCCESS('Dropping canceled'))
-            return
+            if confirmation != 'y':
+                self.stdout.write(self.style.SUCCESS('Dropping canceled'))
+                return
 
         with connections[DEFAULT_DB_ALIAS].cursor() as cursor:
             cursor.execute(f'DROP SCHEMA {schema} CASCADE')
