@@ -33,13 +33,14 @@ python manage.py runserver
 ```
 
 Use `CUP_CONF` environment variable for custom config from `.ini` file in the `config` folder,
-otherwise `config.ini` will be used.
+otherwise `config.ini` will be used. Sample config `config_default.ini` stored 
+in the `config` folder.
 
 Log in with credentials `admin / admin` or `streamer / streamer`.
 
 ## Documentation
 
-Swagger UI available on `/api/docs`. All dev-needed links are available on `/dev`.
+Swagger UI available on `/api/docs`. All dev-needed links available on `/dev`.
 
 ## Important CLI commands
 
