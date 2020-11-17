@@ -54,3 +54,9 @@ Populate database with generated objects (broadcasts and messages):
 ```
 python manage.py create
 ```
+
+Drop schema for default database (PostgreSQL only):
+
+```
+python manage.py reset-db
+```
