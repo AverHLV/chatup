@@ -5,8 +5,8 @@ from rest_framework import generics, viewsets, permissions, status
 from rest_framework.views import APIView, Response
 from rest_framework.decorators import action
 
-from drf_yasg2 import openapi
-from drf_yasg2.utils import swagger_auto_schema
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
 from itertools import groupby
 from operator import attrgetter

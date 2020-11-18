@@ -45,7 +45,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'django_filters',
     'corsheaders',
-    'drf_yasg2',
+    'drf_yasg',
     'channels',
 
     # own apps
