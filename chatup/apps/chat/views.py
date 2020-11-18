@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.utils.translation import get_language_from_request, gettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from rest_framework import generics, viewsets, permissions, status
 from rest_framework.views import APIView, Response
@@ -153,13 +153,16 @@ class BroadcastViewSet(ModelViewSetBase):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        getter = attrgetter('role.sid')
         users = broadcast.watchers.select_related('role').distinct()
-        lang = get_language_from_request(request)
-        key = f'role.name_{lang}' if lang != settings.LANGUAGES[0][0] else 'role.name'
+
+        result = {
+            key: self.get_serializer(group, many=True).data
+            for key, group in groupby(users, key=getter)
+        }
+
+        # reorder by role sids, add empty roles
 
         return Response({
-            'result': {
-                key: self.get_serializer(group, many=True).data
-                for key, group in groupby(users, key=attrgetter(key))
-            }
+            'result': {role: result.get(role, []) for role, __ in reversed(models.ROLE_SIDS)}
         })
