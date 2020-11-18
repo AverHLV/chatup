@@ -36,18 +36,24 @@ class Command(BaseCommand):
     @debug_required
     @atomic
     def handle(self, *args, **options) -> None:
+        active_broadcast = None
         broadcasts, messages = [], []
 
         if not any(options[destination] for destination in self.dests):
-            broadcasts = create_broadcasts(self.broadcast_number_default)
+            broadcasts, active_broadcast = create_broadcasts(self.broadcast_number_default)
             messages = create_messages(self.message_number_default)
 
         else:
             if options[self.dests[0]]:
-                broadcasts = create_broadcasts(options[self.dests[0]])
+                broadcasts, active_broadcast = create_broadcasts(options[self.dests[0]])
 
             if options[self.dests[1]]:
                 messages = create_messages(options[self.dests[1]])
+
+        if active_broadcast is not None:
+            self.stdout.write(
+                self.style.SUCCESS(f'Broadcast #{active_broadcast.id} marked as active')
+            )
 
         if len(broadcasts):
             self.stdout.write(

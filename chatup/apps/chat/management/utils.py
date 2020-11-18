@@ -23,7 +23,9 @@ def debug_required(handler) -> callable:
     return wrapper
 
 
-def create_broadcasts(count: int) -> list:
+def create_broadcasts(count: int) -> tuple:
+    """ Create broadcasts with generated data, mark one as active if no active broadcasts """
+
     streamers = models.CustomUser.objects.filter(role__sid=models.STREAMER_ROLE_SID)
 
     if not len(streamers):
@@ -40,8 +42,17 @@ def create_broadcasts(count: int) -> list:
         for i in range(count)
     ]
 
+    active_broadcast = None
     models.Broadcast.objects.bulk_create(broadcasts)
-    return broadcasts
+
+    # make one broadcast as active
+
+    if not models.Broadcast.objects.filter(is_active=True).exists():
+        active_broadcast = models.Broadcast.objects.first()
+        active_broadcast.is_active = True
+        active_broadcast.save(update_fields=['is_active'])
+
+    return broadcasts, active_broadcast
 
 
 def create_messages(count: int) -> list:
