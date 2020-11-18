@@ -161,8 +161,10 @@ class BroadcastViewSet(ModelViewSetBase):
             for key, group in groupby(users, key=getter)
         }
 
-        # reorder by role sids, add empty roles
+        # reorder by role sids
 
         return Response({
-            'result': {role: result.get(role, []) for role, __ in reversed(models.ROLE_SIDS)}
+            'result': {
+                role: result[role] for role, __ in reversed(models.ROLE_SIDS) if role in result
+            }
         })
