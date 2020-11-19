@@ -87,6 +87,27 @@ class UserView(APIView):
         return Response(serializer.data)
 
 
+class UpdateUserView(APIView):
+    """ Update current user data """
+
+    @swagger_auto_schema(
+        request_body=serializers.UserSerializer,
+        responses={'200': serializers.UserSerializer}
+    )
+    def patch(self, request):
+        serializer = serializers.UserSerializer(
+            request.user,
+            data=request.data,
+            partial=True,
+            context={'request': request, 'view': self}
+        )
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(serializer.data)
+
+
 class RoleView(generics.ListAPIView):
     """ User roles list view """
 

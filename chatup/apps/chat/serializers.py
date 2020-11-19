@@ -20,6 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.CustomUser
         fields = USER_FIELDS
+        read_only_fields = 'id', 'watchtime', 'role'
 
 
 class UserPublicSerializer(UserSerializer):
