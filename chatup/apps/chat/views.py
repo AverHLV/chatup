@@ -86,10 +86,6 @@ class UserView(APIView):
 
         return Response(serializer.data)
 
-
-class UpdateUserView(APIView):
-    """ Update current user data """
-
     @swagger_auto_schema(
         request_body=serializers.UserSerializer,
         responses={'200': serializers.UserSerializer}
