@@ -4,12 +4,14 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import generics, viewsets, permissions, status
 from rest_framework.views import APIView, Response
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, MultiPartParser
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from itertools import groupby
 from operator import attrgetter
+import base64
 
 from . import models, serializers, permissions as own_permissions
 
@@ -182,3 +184,31 @@ class BroadcastViewSet(ModelViewSetBase):
                 role: result[role] for role, __ in reversed(models.Role.SIDS) if role in result
             }
         })
+
+
+class ImageView(APIView):
+    """ Get images info """
+
+    parser_classes = FormParser, MultiPartParser
+    permission_classes = permissions.IsAuthenticatedOrReadOnly, own_permissions.IsStreamer
+
+    @swagger_auto_schema(responses={'200': serializers.ImageSerializer})
+    def get(self, request):
+        images = models.Image.objects.all()
+        serializer = serializers.ImageSerializer(images, many=True)
+        return Response(serializer.data)
+
+    @swagger_auto_schema(
+        request_body=serializers.ImageFieldSerializer,
+        responses={'200': serializers.ImageSerializer}
+    )
+    def post(self, request):
+        serializer = serializers.ImageSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        encoded_image = base64.b64encode(request.data['image'].read())
+
+        serializer.validated_data['image'] = encoded_image
+        serializer.save()
+
+        return Response(serializer.data)

@@ -6,7 +6,7 @@ from rest_framework.exceptions import ValidationError
 from api.abstract.serializers import TranslatedModelSerializer
 from . import models
 
-USER_PUBLIC_FIELDS = 'id', 'username', 'watchtime', 'username_color', 'role'
+USER_PUBLIC_FIELDS = 'id', 'username', 'watchtime', 'username_color', 'role', 'role_icon'
 USER_FIELDS = USER_PUBLIC_FIELDS + ('email',)
 
 
@@ -20,7 +20,17 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
         fields = USER_FIELDS
-        read_only_fields = 'id', 'watchtime', 'role'
+        read_only_fields = 'id', 'watchtime', 'role', 'role_icon'
+
+
+class ImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.Image
+        fields = 'id', 'image', 'type', 'description', 'exclusive_access_role'
+
+
+class ImageFieldSerializer(ImageSerializer):
+    image = serializers.ImageField()
 
 
 class UserPublicSerializer(UserSerializer):

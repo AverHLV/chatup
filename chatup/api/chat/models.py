@@ -7,6 +7,22 @@ from model_utils import Choices
 
 from api.abstract.models import TimeStamped, NameTranslation
 
+IMAGE_TYPES = (
+    ('smiley', 'Smiley'),
+    ('role', 'Role'),
+    ('experience', 'Experience'),
+    ('status', 'Status'),
+    ('event', 'Event'),
+)
+
+ROLE_ICONS = {
+    'user': 1,
+    'vip': 2,
+    'moderator': 3,
+    'administrator': 4,
+    'streamer': 5
+}
+
 
 class Role(NameTranslation):
     """
@@ -33,6 +49,25 @@ class Role(NameTranslation):
 
     def __str__(self):
         return self.sid
+
+
+class Image(models.Model):
+    """
+    Image model
+
+    exclusive_access_role: permanent access for specified role
+    """
+
+    image = models.BinaryField(blank=True, null=True, editable=True)
+    type = models.CharField(choices=IMAGE_TYPES, max_length=20)
+    description = models.CharField(blank=True, null=True, max_length=1000)
+    exclusive_access_role = models.CharField(choices=Role.SIDS, null=True, max_length=20)
+
+    class Meta:
+        db_table = 'images'
+
+    def __str__(self):
+        return self.description
 
 
 class CustomUserManager(UserManager):
@@ -76,6 +111,18 @@ class User(AbstractUser):
         related_name='users'
     )
 
+    role_icon = models.ForeignKey(
+        Image,
+        on_delete=models.PROTECT,
+        blank=True,
+        null=True
+    )
+
+    available_images = models.ManyToManyField(
+        Image,
+        related_name="owners"
+    )
+
     objects = CustomUserManager()
 
     class Meta:
@@ -85,6 +132,14 @@ class User(AbstractUser):
 
     def __str__(self):
         return f'{self.pk}: {self.username}'
+
+    def save(self, *args, **kwargs):
+        if not self.role_icon:
+            self.role_icon = Image.objects.get(pk=ROLE_ICONS[str(self.role)])
+
+        super().save(*args, **kwargs)
+
+        self.available_images.set(Image.objects.filter(exclusive_access_role=self.role.sid))
 
 
 class Broadcast(TimeStamped):
