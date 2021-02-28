@@ -94,15 +94,6 @@ DATABASES = {
         'PASSWORD': config.get('database', 'password'),
         'HOST': config.get('database', 'host'),
         'PORT': config.get('database', 'port'),
-
-        'TEST': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config.get('database_test', 'name'),
-            'USER': config.get('database_test', 'user'),
-            'PASSWORD': config.get('database_test', 'password'),
-            'HOST': config.get('database_test', 'host'),
-            'PORT': config.get('database_test', 'port'),
-        }
     }
 }
 
