@@ -179,6 +179,6 @@ class BroadcastViewSet(ModelViewSetBase):
 
         return Response({
             'result': {
-                role: result[role] for role, __ in reversed(models.ROLE_SIDS) if role in result
+                role: result[role] for role, __ in reversed(models.Role.SIDS) if role in result
             }
         })

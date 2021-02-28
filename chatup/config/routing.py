@@ -7,7 +7,6 @@ from channels.routing import ProtocolTypeRouter, URLRouter
 
 router = ProtocolTypeRouter({
     'http': get_asgi_application(),
-
     'websocket': AuthMiddlewareStack(
         URLRouter([
             *chat_routing.websocket_urlpatterns,

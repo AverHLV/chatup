@@ -18,14 +18,14 @@ class RoleSerializer(TranslatedModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.CustomUser
+        model = models.User
         fields = USER_FIELDS
         read_only_fields = 'id', 'watchtime', 'role'
 
 
 class UserPublicSerializer(UserSerializer):
     class Meta:
-        model = models.CustomUser
+        model = models.User
         fields = USER_PUBLIC_FIELDS
 
 
@@ -74,12 +74,12 @@ class MessageSerializer(serializers.ModelSerializer):
 
         if isinstance(self.context['request'], dict):
             self.fields['author'] = serializers.PrimaryKeyRelatedField(
-                queryset=models.CustomUser.objects.only('id')
+                queryset=models.User.objects.only('id')
             )
 
             self.fields['deleter'] = serializers.PrimaryKeyRelatedField(
                 required=False,
-                queryset=models.CustomUser.objects.only('id')
+                queryset=models.User.objects.only('id')
             )
 
     @staticmethod

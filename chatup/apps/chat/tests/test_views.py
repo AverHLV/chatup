@@ -11,7 +11,7 @@ class LangTestCase(APITestCase):
         self.factory = APIRequestFactory()
 
         self.default_found = False
-        self.user = models.CustomUser.objects.get_by_natural_key('admin')
+        self.user = models.User.objects.get_by_natural_key('admin')
         self.codes = [lang[0] for lang in settings.LANGUAGES]
 
     def test_lang_view(self):
@@ -40,7 +40,7 @@ class UserTestCase(APITestCase):
 
     def setUp(self) -> None:
         self.factory = APIRequestFactory()
-        self.user = models.CustomUser.objects.get_by_natural_key('admin')
+        self.user = models.User.objects.get_by_natural_key('admin')
 
     def test_user_view(self):
         """ Test user instance structure """
@@ -62,8 +62,8 @@ class RoleTestCase(APITestCase):
         self.factory = APIRequestFactory()
 
         self.roles = models.Role.objects.all()
-        self.admin_role = models.Role.objects.get(sid=models.ADMIN_ROLE_SID)
-        self.user = models.CustomUser.objects.get_by_natural_key('admin')
+        self.admin_role = models.Role.objects.get(sid=models.Role.SIDS.administrator)
+        self.user = models.User.objects.get_by_natural_key('admin')
 
     def test_roles_list(self):
         """ Test roles list total count, order and first element structure """

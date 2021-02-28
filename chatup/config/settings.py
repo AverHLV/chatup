@@ -28,7 +28,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Authentication
 
-AUTH_USER_MODEL = 'chat.CustomUser'
+AUTH_USER_MODEL = 'chat.User'
 
 # Application definition
 

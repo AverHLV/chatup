@@ -3,21 +3,9 @@ from django.core import validators
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.utils.translation import gettext_lazy as _
 
+from model_utils import Choices
+
 from ..abstract import TimeStamped, NameTranslation
-
-ROLE_SIDS = (
-    ('user', 'User'),
-    ('vip', 'VIP'),
-    ('moderator', 'Moderator'),
-    ('administrator', 'Administrator'),
-    ('streamer', 'Streamer'),
-)
-
-USER_ROLE_SID = ROLE_SIDS[0][0]
-VIP_ROLE_SID = ROLE_SIDS[1][0]
-MODER_ROLE_SID = ROLE_SIDS[2][0]
-ADMIN_ROLE_SID = ROLE_SIDS[3][0]
-STREAMER_ROLE_SID = ROLE_SIDS[4][0]
 
 USER_DEFAULT_ROLE_ID = 1
 
@@ -30,7 +18,15 @@ class Role(NameTranslation):
     sid: role string identifier
     """
 
-    sid = models.CharField(max_length=20, unique=True, choices=ROLE_SIDS)
+    SIDS = Choices(
+        ('user', 'User'),
+        ('vip', 'VIP'),
+        ('moderator', 'Moderator'),
+        ('administrator', 'Administrator'),
+        ('streamer', 'Streamer'),
+    )
+
+    sid = models.CharField(max_length=20, unique=True, choices=SIDS)
 
     class Meta:
         db_table = 'roles'
@@ -50,10 +46,8 @@ class CustomUserManager(UserManager):
         return super().select_related('role').get(*args, **kwargs)
 
 
-class CustomUser(AbstractUser):
+class User(AbstractUser):
     """
-    Chatup custom user model
-
     email: user email for notifications or news, optional
     watchtime: total time of the watched broadcasts (seconds)
     username_color: username color in chat, hex format, black by default
@@ -115,14 +109,14 @@ class Broadcast(TimeStamped):
     )
 
     streamer = models.ForeignKey(
-        CustomUser,
+        User,
         verbose_name=_('streamer'),
         on_delete=models.PROTECT,
         related_name='broadcasts'
     )
 
     watchers = models.ManyToManyField(
-        CustomUser,
+        User,
         through='BroadcastToUser',
         verbose_name=_('watchers')
     )
@@ -141,7 +135,7 @@ class BroadcastToUser(models.Model):
     """ Custom many-to-many model that allows multiple relationships """
 
     broadcast = models.ForeignKey(Broadcast, on_delete=models.CASCADE)
-    user = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
 
     class Meta:
         db_table = 'broadcasts_to_users'
@@ -167,14 +161,14 @@ class Message(TimeStamped):
     )
 
     author = models.ForeignKey(
-        CustomUser,
+        User,
         verbose_name=_('author'),
         on_delete=models.PROTECT,
         related_name='messages'
     )
 
     deleter = models.ForeignKey(
-        CustomUser,
+        User,
         blank=True,
         null=True,
         verbose_name=_('deleter'),

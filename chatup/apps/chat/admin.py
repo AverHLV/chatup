@@ -11,7 +11,7 @@ class RoleAdmin(admin.ModelAdmin):
     readonly_fields = 'sid', 'name', 'name_ru'
 
 
-@admin.register(models.CustomUser)
+@admin.register(models.User)
 class CustomUserAdmin(UserAdmin):
     search_fields = 'username',
     list_display = 'username', 'email', 'role'

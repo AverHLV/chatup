@@ -33,7 +33,7 @@
       name: Streamer
       name_ru: Стример
 
-- model: chat.CustomUser
+- model: chat.User
   pk: 1
   fields:
       username: user
@@ -43,7 +43,7 @@
       username_color: '000000'
       role: 1
 
-- model: chat.CustomUser
+- model: chat.User
   pk: 2
   fields:
       username: vip
@@ -53,7 +53,7 @@
       username_color: 'E8303B'
       role: 2
 
-- model: chat.CustomUser
+- model: chat.User
   pk: 3
   fields:
       username: moderator
@@ -63,7 +63,7 @@
       username_color: '137CB0'
       role: 3
 
-- model: chat.CustomUser
+- model: chat.User
   pk: 4
   fields:
       username: admin
@@ -75,7 +75,7 @@
       is_staff: True
       is_superuser: True
 
-- model: chat.CustomUser
+- model: chat.User
   pk: 5
   fields:
       username: streamer
