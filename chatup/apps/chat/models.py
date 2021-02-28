@@ -52,7 +52,7 @@ class User(AbstractUser):
     role: user-specific role, ordinary users have 'user' role by default
     """
 
-    USER_DEFAULT_ROLE_ID = 1
+    DEFAULT_ROLE_ID = 1
 
     email = models.EmailField(unique=True, blank=True, null=True)
 
@@ -71,7 +71,7 @@ class User(AbstractUser):
     role = models.ForeignKey(
         Role,
         verbose_name=_('role'),
-        default=USER_DEFAULT_ROLE_ID,
+        default=DEFAULT_ROLE_ID,
         on_delete=models.PROTECT,
         related_name='users'
     )
