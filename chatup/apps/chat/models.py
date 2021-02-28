@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 
 from model_utils import Choices
 
-from ..abstract import TimeStamped, NameTranslation
+from apps.abstract.models import TimeStamped, NameTranslation
 
 
 class Role(NameTranslation):

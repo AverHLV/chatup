@@ -154,8 +154,8 @@ if REST_API_USE_HTTPS:
     SESSION_COOKIE_SECURE = True
 
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'apps.pagination.CustomLimitOffsetPagination',
-    'EXCEPTION_HANDLER': 'apps.exception_handler.custom_exception_handler',
+    'DEFAULT_PAGINATION_CLASS': 'apps.abstract.pagination.CustomLimitOffsetPagination',
+    'EXCEPTION_HANDLER': 'apps.abstract.exception_handler.custom_exception_handler',
     'PAGE_SIZE': 30,
 
     'DEFAULT_AUTHENTICATION_CLASSES': (

@@ -3,8 +3,8 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from apps.abstract.serializers import TranslatedModelSerializer
 from . import models
-from ..serializers import TranslatedModelSerializer
 
 USER_PUBLIC_FIELDS = 'id', 'username', 'watchtime', 'username_color', 'role'
 USER_FIELDS = USER_PUBLIC_FIELDS + ('email',)
