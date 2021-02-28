@@ -7,8 +7,6 @@ from model_utils import Choices
 
 from ..abstract import TimeStamped, NameTranslation
 
-USER_DEFAULT_ROLE_ID = 1
-
 
 class Role(NameTranslation):
     """
@@ -53,6 +51,8 @@ class User(AbstractUser):
     username_color: username color in chat, hex format, black by default
     role: user-specific role, ordinary users have 'user' role by default
     """
+
+    USER_DEFAULT_ROLE_ID = 1
 
     email = models.EmailField(unique=True, blank=True, null=True)
 
