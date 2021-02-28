@@ -7,7 +7,6 @@ from configparser import ConfigParser
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 CONFIG_PATH = BASE_DIR / 'config' / environ.get('CUP_CONF', 'config.ini')
-
 if not CONFIG_PATH.is_file():
     raise ImproperlyConfigured(f'Config file with specified path not found: {CONFIG_PATH}')
 
@@ -127,13 +126,11 @@ AUTH_PASSWORD_VALIDATORS = [
 
 if config.get('cache', 'user', fallback=None) is None:
     redis_url = f'redis://{config.get("cache", "host")}:{config.get("cache", "port")}/0'
-
 else:
     user = config.get('cache', 'user')
     password = config.get('cache', 'password')
     host = config.get('cache', 'host')
     port = config.get('cache', 'port')
-
     redis_url = f'redis://{user}:{password}@{host}:{port}/0'
 
 CACHES = {
@@ -253,8 +250,7 @@ LANGUAGES = (
 )
 
 default_lang = config.get('django', 'default_lang', fallback='en')
-
-if default_lang not in [lang[0] for lang in LANGUAGES]:
+if default_lang not in (lang[0] for lang in LANGUAGES):
     raise ImproperlyConfigured(f'Specified default language not supported: {default_lang}')
 
 LANGUAGE_CODE = default_lang
