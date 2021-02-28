@@ -1,23 +1,24 @@
-version: "3.3"
+version: '3.4'
 services:
   postgres:
-    image: postgres
-    container_name: pg
+    image: postgres:12.4
+    container_name: ch-pg
     ports:
       - 5432:5432
     environment:
       - POSTGRES_PASSWORD=postgres
+      - POSTGRES_HOST_AUTH_METHOD=trust
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - chpgdata:/var/lib/postgresql/data
 
   redis:
-    image: redis
-    container_name: redis
+    image: redis:5.0.9
+    container_name: ch-redis
     ports:
       - 6379:6379
     volumes:
-      - redisdata:/var/lib/redis/data
+      - chrsdata:/data
 
 volumes:
-  pgdata:
-  redisdata:
+  chpgdata:
+  chrsdata:
