@@ -35,13 +35,11 @@ class Command(BaseCommand):
     @debug_required
     def handle(self, *args, **options) -> None:
         info = settings.DATABASES[DEFAULT_DB_ALIAS]
-
         if info['ENGINE'] != 'django.db.backends.postgresql':
             raise CommandError('This command can be used only with PostgreSQL')
 
         schema = options['schema']
         noconfirm = options['noconfirm']
-
         if not noconfirm:
             confirmation = input(
                 f'All data from "{schema}" schema in default database will be lost. '
@@ -49,11 +47,11 @@ class Command(BaseCommand):
             )
 
             if confirmation != 'y':
-                self.stdout.write(self.style.SUCCESS('Dropping canceled'))
+                self.stdout.write('Dropping canceled')
                 return
 
         with connections[DEFAULT_DB_ALIAS].cursor() as cursor:
             cursor.execute(f'DROP SCHEMA {schema} CASCADE')
             cursor.execute(f'CREATE SCHEMA {schema}')
 
-        self.stdout.write(self.style.SUCCESS('Successfully dropped'))
+        self.stdout.write('Successfully dropped')

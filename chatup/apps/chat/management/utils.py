@@ -27,8 +27,7 @@ def create_broadcasts(count: int) -> tuple:
     """ Create broadcasts with generated data, mark one as active if no active broadcasts """
 
     streamers = models.CustomUser.objects.filter(role__sid=models.STREAMER_ROLE_SID)
-
-    if not len(streamers):
+    if not streamers:
         raise CommandError('No streamers in database')
 
     broadcasts = [
@@ -38,12 +37,10 @@ def create_broadcasts(count: int) -> tuple:
             streamer=choice(streamers),
             is_active=False
         )
-
         for i in range(count)
     ]
-
-    active_broadcast = None
     models.Broadcast.objects.bulk_create(broadcasts)
+    active_broadcast = None
 
     # make one broadcast as active
 
@@ -59,8 +56,7 @@ def create_messages(count: int) -> list:
     broadcasts = models.Broadcast.objects.all()
     users = models.CustomUser.objects.all()
     moderators = models.CustomUser.objects.filter(role__sid=models.MODER_ROLE_SID)
-
-    if not len(broadcasts) or not len(users) or not len(moderators):
+    if not broadcasts or not users or not moderators:
         raise CommandError('No needed data in database')
 
     messages = [
@@ -70,9 +66,7 @@ def create_messages(count: int) -> list:
             author=choice(users),
             deleter=choice(moderators) if not i % 5 else None
         )
-
         for i in range(count)
     ]
-
     models.Message.objects.bulk_create(messages)
     return messages

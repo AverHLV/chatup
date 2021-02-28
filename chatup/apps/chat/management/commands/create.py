@@ -7,10 +7,10 @@ from ..utils import debug_required, create_broadcasts, create_messages
 class Command(BaseCommand):
     """ Populate database with needed objects count """
 
-    help = 'Helper for database populating'
+    help = 'Helper for database population'
     requires_migrations_checks = True
 
-    dests = ['broadcasts', 'messages']
+    dests = 'broadcasts', 'messages'
     broadcast_number_default: int = 10
     message_number_default: int = 20
 
@@ -51,14 +51,10 @@ class Command(BaseCommand):
                 messages = create_messages(options[self.dests[1]])
 
         if active_broadcast is not None:
-            self.stdout.write(
-                self.style.SUCCESS(f'Broadcast #{active_broadcast.id} marked as active')
-            )
+            self.stdout.write(f'Broadcast #{active_broadcast.id} marked as active')
 
-        if len(broadcasts):
-            self.stdout.write(
-                self.style.SUCCESS(f'{len(broadcasts)} broadcasts created successfully')
-            )
+        if broadcasts:
+            self.stdout.write(f'{len(broadcasts)} broadcasts created successfully')
 
-        if len(messages):
-            self.stdout.write(self.style.SUCCESS(f'{len(messages)} messages created successfully'))
+        if messages:
+            self.stdout.write(f'{len(messages)} messages created successfully')
