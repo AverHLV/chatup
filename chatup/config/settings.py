@@ -1,4 +1,5 @@
 from django.core.exceptions import ImproperlyConfigured
+from django.core.management.utils import get_random_secret_key
 from django.utils.translation import gettext_lazy as _
 
 from os import environ
@@ -15,7 +16,7 @@ config.read(CONFIG_PATH)
 
 # General
 
-SECRET_KEY = config.get('django', 'secret_key')
+SECRET_KEY = get_random_secret_key()
 
 DEBUG = config.get('django', 'debug', fallback='true') == 'true'
 
