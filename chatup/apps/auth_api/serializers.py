@@ -29,8 +29,7 @@ class LoginSerializer(serializers.Serializer):
         """ Find user instance by the given credentials """
 
         self.user = authenticate(self.context['request'], **attrs)
-
-        if self.user is None:
+        if not self.user:
             raise ValidationError({'detail': _('User not found by the given credentials.')})
 
         return attrs
@@ -50,7 +49,6 @@ class SignUpSerializer(serializers.Serializer):
         """ Validate user data by the creation form """
 
         self.form = CustomUserCreationForm(data=attrs)
-
         if self.form.is_valid():
             return attrs
 

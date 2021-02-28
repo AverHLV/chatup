@@ -43,7 +43,6 @@ class BroadcastSerializer(serializers.ModelSerializer):
             active = models.Broadcast.objects \
                 .filter(streamer=self.context['request'].user, is_active=True) \
                 .exists()
-
             if active:
                 raise ValidationError({'is_active': _('You can have only one active broadcast.')})
 

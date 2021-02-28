@@ -39,7 +39,6 @@ class ModelViewSetBase(viewsets.ModelViewSet):
 
         for field in self.filterset_action_fields[self.action]:
             value = request.query_params.get(field, None)
-
             if value is not None:
                 filters[field] = value
 
@@ -49,8 +48,7 @@ class ModelViewSetBase(viewsets.ModelViewSet):
         """ List action for custom queryset """
 
         page = self.paginate_queryset(queryset)
-
-        if page is not None:
+        if page:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
 
@@ -130,7 +128,6 @@ class BroadcastViewSet(ModelViewSetBase):
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
-
         if instance.is_active:
             return Response(
                 {'detail': _('Only inactive broadcasts can be deleted.')},
@@ -153,7 +150,7 @@ class BroadcastViewSet(ModelViewSetBase):
             .select_related('author', 'deleter') \
             .order_by('-created')
 
-        if len(filters):
+        if filters:
             queryset = queryset.filter(**filters)
 
         return self.list_response(queryset)
