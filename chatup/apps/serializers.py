@@ -21,7 +21,6 @@ class TranslatedModelSerializer(serializers.ModelSerializer):
             return
 
         lang = get_language_from_request(self.context['request'])
-
         if lang != settings.LANGUAGES[0][0]:
             for field_name in self.translated_fields:
                 self.fields[field_name].source_attrs = [f'{field_name}_{lang}']

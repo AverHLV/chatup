@@ -52,7 +52,6 @@ class BroadcastSerializer(serializers.ModelSerializer):
         request = self.context['request']
         if request.method == 'POST':
             attrs['streamer'] = request.user
-
         return attrs
 
 

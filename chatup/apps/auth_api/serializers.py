@@ -31,7 +31,6 @@ class LoginSerializer(serializers.Serializer):
         self.user = authenticate(self.context['request'], **attrs)
         if not self.user:
             raise ValidationError({'detail': _('User not found by the given credentials.')})
-
         return attrs
 
 
@@ -56,7 +55,6 @@ class SignUpSerializer(serializers.Serializer):
             field: [error['message'] for error in errors]
             for field, errors in self.form.errors.get_json_data().items()
         }
-
         raise ValidationError(rest_errors)
 
     def create(self, validated_data: dict):
@@ -66,5 +64,4 @@ class SignUpSerializer(serializers.Serializer):
 
         if 'email' not in validated_data:
             self.form.instance.email = None
-
         return self.form.save()

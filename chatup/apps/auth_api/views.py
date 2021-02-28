@@ -32,7 +32,6 @@ class LoginView(APIView):
             data=request.data,
             context={'request': request, 'view': self}
         )
-
         serializer.is_valid(raise_exception=True)
         login(request, serializer.user)
         return Response({'detail': _('Successfully logged in.')})
@@ -68,7 +67,6 @@ class SignUpView(APIView):
             data=request.data,
             context={'request': request, 'view': self}
         )
-
         serializer.is_valid(raise_exception=True)
         login(request, serializer.save())
         return Response({'detail': _('Successfully registered and logged in.')})

@@ -45,7 +45,6 @@ class Command(BaseCommand):
                 f'All data from "{schema}" schema in default database will be lost. '
                 f'Are you sure? [y/N] '
             )
-
             if confirmation != 'y':
                 self.stdout.write('Dropping canceled')
                 return

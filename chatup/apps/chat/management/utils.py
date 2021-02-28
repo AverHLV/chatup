@@ -42,7 +42,7 @@ def create_broadcasts(count: int) -> tuple:
     models.Broadcast.objects.bulk_create(broadcasts)
     active_broadcast = None
 
-    # make one broadcast as active
+    # mark one broadcast as active
 
     if not models.Broadcast.objects.filter(is_active=True).exists():
         active_broadcast = models.Broadcast.objects.first()

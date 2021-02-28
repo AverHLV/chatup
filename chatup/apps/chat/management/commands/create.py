@@ -50,7 +50,7 @@ class Command(BaseCommand):
             if options[self.dests[1]]:
                 messages = create_messages(options[self.dests[1]])
 
-        if active_broadcast is not None:
+        if active_broadcast:
             self.stdout.write(f'Broadcast #{active_broadcast.id} marked as active')
 
         if broadcasts:
