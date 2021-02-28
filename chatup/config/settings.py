@@ -151,8 +151,6 @@ SESSION_COOKIE_AGE = 3600 * 12
 
 # REST API
 
-REST_API_VERSION = 'v1'
-
 REST_API_DOCS_URL = config.get('django', 'swagger_url', fallback=None)
 
 REST_API_USE_HTTPS = config.get('django', 'https', fallback='false') == 'true'
