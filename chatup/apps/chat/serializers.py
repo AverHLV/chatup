@@ -48,13 +48,12 @@ class BroadcastSerializer(serializers.ModelSerializer):
 
         return value
 
-    def validate(self, attr: dict) -> dict:
+    def validate(self, attrs: dict) -> dict:
         request = self.context['request']
-
         if request.method == 'POST':
-            attr['streamer'] = request.user
+            attrs['streamer'] = request.user
 
-        return attr
+        return attrs
 
 
 class MessageSerializer(serializers.ModelSerializer):

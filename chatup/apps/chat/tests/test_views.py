@@ -55,7 +55,7 @@ class UserTestCase(APITestCase):
         self.assertEqual(response.data['role'], self.user.role_id)
 
 
-class RolesTestCase(APITestCase):
+class RoleTestCase(APITestCase):
     fixtures = 'init',
 
     def setUp(self) -> None:
@@ -77,10 +77,6 @@ class RolesTestCase(APITestCase):
         self.assertEqual(response.data['result'][0]['id'], self.admin_role.id)
         self.assertEqual(response.data['result'][0]['sid'], self.admin_role.sid)
 
-        # assuming that default language is 'ru'
-
-        self.assertEqual(response.data['result'][0]['name'], self.admin_role.name_ru)
-
     def test_roles_list_translation(self):
         """ Test translation of the 'name' field """
 
@@ -92,3 +88,10 @@ class RolesTestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['total_count'], len(self.roles))
         self.assertEqual(response.data['result'][0]['name'], self.admin_role.name)
+
+        request.COOKIES[settings.LANGUAGE_COOKIE_NAME] = settings.LANGUAGES[1][0]
+        response = views.RoleView.as_view()(request)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['total_count'], len(self.roles))
+        self.assertEqual(response.data['result'][0]['name'], self.admin_role.name_ru)

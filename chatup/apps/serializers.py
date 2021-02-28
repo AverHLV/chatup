@@ -17,7 +17,6 @@ class TranslatedModelSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         context = kwargs.get('context', None)
-
         if context is None:
             return
 
@@ -31,13 +30,10 @@ class TranslatedModelSerializer(serializers.ModelSerializer):
     def translated_fields(self) -> list:
         """ Get a list of field names with a complete translation """
 
-        field_names = list(self.fields.keys())
-        model_field_names = [field.name for field in self.Meta.model._meta.fields]
+        field_names = {field.name for field in self.Meta.model._meta.fields}
 
         return [
             field_name
-            for field_name in field_names
-            if all(
-                f'{field_name}_{lang[0]}' in model_field_names for lang in settings.LANGUAGES[1:]
-            )
+            for field_name in self.fields
+            if all(f'{field_name}_{lang[0]}' in field_names for lang in settings.LANGUAGES[1:])
         ]
