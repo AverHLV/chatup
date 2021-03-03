@@ -50,8 +50,8 @@ INSTALLED_APPS = [
 
     # own apps
 
-    'apps.chat',
-    'apps.auth_api',
+    'api.chat',
+    'api.auth_api',
 ]
 
 MIDDLEWARE = [
@@ -154,8 +154,8 @@ if REST_API_USE_HTTPS:
     SESSION_COOKIE_SECURE = True
 
 REST_FRAMEWORK = {
-    'DEFAULT_PAGINATION_CLASS': 'apps.abstract.pagination.CustomLimitOffsetPagination',
-    'EXCEPTION_HANDLER': 'apps.abstract.exception_handler.custom_exception_handler',
+    'DEFAULT_PAGINATION_CLASS': 'api.abstract.pagination.CustomLimitOffsetPagination',
+    'EXCEPTION_HANDLER': 'api.abstract.exception_handler.custom_exception_handler',
     'PAGE_SIZE': 30,
 
     'DEFAULT_AUTHENTICATION_CLASSES': (

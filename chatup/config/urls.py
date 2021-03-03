@@ -12,8 +12,8 @@ from drf_yasg.views import get_schema_view
 urlpatterns = [
     path('', serve, {'path': 'index.html'}),
     path('admin/', admin.site.urls),
-    path('api/', include('apps.chat.urls')),
-    path('api/auth/', include('apps.auth_api.urls')),
+    path('api/', include('api.chat.urls')),
+    path('api/auth/', include('api.auth_api.urls')),
 ]
 
 # add swagger ui view and dev related links

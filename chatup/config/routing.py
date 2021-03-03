@@ -1,4 +1,4 @@
-import apps.chat.routing as chat_routing
+import api.chat.routing as chat_routing
 
 from django.core.asgi import get_asgi_application
 
