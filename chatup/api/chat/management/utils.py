@@ -1,8 +1,11 @@
 from django.conf import settings
 from django.core.management.base import CommandError
+from PIL import Image, ImageSequence
 
-from random import choice
+import base64
+from io import BytesIO
 from uuid import uuid4
+from random import choice
 
 from .. import models
 
@@ -70,3 +73,29 @@ def create_messages(count: int) -> list:
     ]
     models.Message.objects.bulk_create(messages)
     return messages
+
+
+def encode_image(data: dict, size: tuple) -> bytes:
+    """ Encodes image data into bytes depending on its extension """
+
+    image = Image.open(data['image'])
+    ext = image.format
+    buffer = BytesIO()
+
+    def _thumbnails(_frames, _size):
+        for frame in _frames:
+            thumbnail = frame.copy()
+            thumbnail.thumbnail(_size, Image.ANTIALIAS)
+            yield thumbnail
+
+    if 'GIF' == ext:
+        frames = ImageSequence.Iterator(image)
+        frames = _thumbnails(frames, size)
+        image = next(frames)
+        image.save(buffer, format=ext, save_all=True, append_images=list(frames), loop=0)
+    else:
+        image = image.resize(size)
+        image.save(buffer, format=ext)
+
+    encoded_image = base64.b64encode(buffer.getvalue())
+    return encoded_image

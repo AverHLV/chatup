@@ -11,8 +11,8 @@ from drf_yasg.utils import swagger_auto_schema
 
 from itertools import groupby
 from operator import attrgetter
-import base64
 
+from .management.utils import encode_image
 from . import models, serializers, permissions as own_permissions
 
 author_param = openapi.Parameter(
@@ -203,12 +203,11 @@ class ImageView(APIView):
         responses={'200': serializers.ImageSerializer}
     )
     def post(self, request):
+        encoded_image = encode_image(request.data, size=(28, 28))
+        request.data['image'] = encoded_image
+
         serializer = serializers.ImageSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        encoded_image = base64.b64encode(request.data['image'].read())
-
-        serializer.validated_data['image'] = encoded_image
         serializer.save()
 
         return Response(serializer.data)
