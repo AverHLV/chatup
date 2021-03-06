@@ -176,16 +176,19 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     @database_sync_to_async
     @atomic
-    def check_images(self, text):
+    def get_available_images(self):
+        available_images = self.scope['user'].available_images.values_list('pk', flat=True)
+        return set(available_images)
+
+    async def check_images(self, text):
         """ Check text of the message for presence of pictures inaccessible to the user """
 
         posted_images = {int(image[8:-1]) for image in re.findall("{img_id:\\d+}", text)}
         if not posted_images:
             return False
 
-        available_images = set(self.scope['user'].available_images.all().values_list('pk', flat=True))
-
-        return len((posted_images ^ available_images) & posted_images)
+        available_images = await self.get_available_images()
+        return len(posted_images - available_images)
 
     async def is_valid(self, message: dict) -> bool:
         """ Validate basic structure of received WS message """

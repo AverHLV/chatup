@@ -118,10 +118,9 @@ class User(AbstractUser):
         null=True
     )
 
-    available_images = models.ManyToManyField(
-        Image,
-        related_name="owners"
-    )
+    @property
+    def available_images(self):
+        return Image.objects.filter(exclusive_access_role=self.role.sid)
 
     objects = CustomUserManager()
 
@@ -135,11 +134,9 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         if not self.role_icon:
-            self.role_icon = Image.objects.get(pk=ROLE_ICONS[str(self.role)])
+            self.role_icon = Image.objects.get(pk=ROLE_ICONS[self.role.sid])
 
         super().save(*args, **kwargs)
-
-        self.available_images.set(Image.objects.filter(exclusive_access_role=self.role.sid))
 
 
 class Broadcast(TimeStamped):
