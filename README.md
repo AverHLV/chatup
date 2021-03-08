@@ -70,3 +70,9 @@ Drop schema for default database (PostgreSQL only):
 ```
 python manage.py reset-db
 ```
+
+Drop schema without confirmation (Heroku case):
+
+```
+python manage.py reset-db -nc True
+```
