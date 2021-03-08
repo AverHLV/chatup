@@ -4,23 +4,21 @@ from django.utils.translation import gettext_lazy as _
 
 from os import environ
 from pathlib import Path
-from configparser import ConfigParser
+from urllib.parse import urlparse
+
+DEFAULT_DB_URL = 'postgres://postgres:postgres@localhost:5432/chatup'
+DEFAULT_REDIS_URL = 'redis://localhost:6379'
+DEFAULT_DOCS_URL = 'http://127.0.0.1:8000/api/docs/'
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-CONFIG_PATH = BASE_DIR / 'config' / environ.get('CUP_CONF', 'config.ini')
-if not CONFIG_PATH.is_file():
-    raise ImproperlyConfigured(f'Config file with specified path not found: {CONFIG_PATH}')
-
-config = ConfigParser()
-config.read(CONFIG_PATH)
 
 # General
 
 SECRET_KEY = get_random_secret_key()
 
-DEBUG = config.get('django', 'debug', fallback='true') == 'true'
+DEBUG = environ.get('CUP_DEBUG', 'true') == 'true'
 
-ALLOWED_HOSTS = config.get('django', 'hosts').split()
+ALLOWED_HOSTS = environ.get('CUP_HOSTS', '*').split(',')
 
 ROOT_URLCONF = 'config.urls'
 
@@ -86,14 +84,16 @@ TEMPLATES = [
 
 # Database
 
+db_url = urlparse(environ.get('DATABASE_URL', DEFAULT_DB_URL))
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config.get('database', 'name'),
-        'USER': config.get('database', 'user'),
-        'PASSWORD': config.get('database', 'password'),
-        'HOST': config.get('database', 'host'),
-        'PORT': config.get('database', 'port'),
+        'NAME': db_url.path[1:],
+        'USER': db_url.username,
+        'PASSWORD': db_url.password,
+        'HOST': db_url.hostname,
+        'PORT': db_url.port,
     }
 }
 
@@ -116,19 +116,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Cache
 
-if config.get('cache', 'user', fallback=None) is None:
-    redis_url = f'redis://{config.get("cache", "host")}:{config.get("cache", "port")}/0'
-else:
-    user = config.get('cache', 'user')
-    password = config.get('cache', 'password')
-    host = config.get('cache', 'host')
-    port = config.get('cache', 'port')
-    redis_url = f'redis://{user}:{password}@{host}:{port}/0'
-
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': redis_url,
+        'LOCATION': environ.get('REDIS_URL', DEFAULT_REDIS_URL),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -140,9 +131,9 @@ SESSION_COOKIE_AGE = 3600 * 12
 
 # REST API
 
-REST_API_DOCS_URL = config.get('django', 'swagger_url', fallback=None)
+REST_API_DOCS_URL = environ.get('CUP_DOCS_URL', DEFAULT_DOCS_URL)
 
-REST_API_USE_HTTPS = config.get('django', 'https', fallback='false') == 'true'
+REST_API_USE_HTTPS = environ.get('CUP_USE_HTTPS', 'false') == 'true'
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
@@ -188,7 +179,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [redis_url],
+            'hosts': [environ.get('REDIS_URL', DEFAULT_REDIS_URL)],
         },
     },
 }
@@ -241,7 +232,7 @@ LANGUAGES = (
     ('ru', _('Russian')),
 )
 
-default_lang = config.get('django', 'default_lang', fallback='en')
+default_lang = environ.get('CUP_DEFAULT_LANG', 'en')
 if default_lang not in (lang[0] for lang in LANGUAGES):
     raise ImproperlyConfigured(f'Specified default language not supported: {default_lang}')
 
