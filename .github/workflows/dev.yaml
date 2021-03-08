@@ -8,18 +8,16 @@ on:
 jobs:
     tests:
         runs-on: ubuntu-latest
-
         steps:
             - uses: actions/checkout@v1
 
             - name: Set up Python
               uses: actions/setup-python@v1
               with:
-                  python-version: 3.7
+                  python-version: 3.6
 
             - name: Start compose
-              run: |
-                  docker-compose up -d
+              run: docker-compose up -d
 
             - name: Install dependencies
               run: |
@@ -28,7 +26,4 @@ jobs:
 
             - name: Run tests
               working-directory: ./chatup
-              env:
-                  CUP_CONF: config_ci_tests.ini
-              run: |
-                  python manage.py test --noinput --parallel
+              run: python manage.py test --noinput --parallel
