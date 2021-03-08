@@ -39,12 +39,12 @@ Log in with credentials `admin / admin` or `streamer / streamer`.
 
 ## Environment variables
 
-- `CUP_DEBUG`, `default=true` - whether DEBUG mode should be enabled;
-- `CUP_ALLOWED_HOSTS`, `default=*` - allowed hosts list, separated by a comma;
+- `CH_DEBUG`, `default=true` - whether DEBUG mode should be enabled;
+- `CH_ALLOWED_HOSTS`, `default=*` - allowed hosts list, separated by a comma;
 - `DATABASE_URL`, `default=postgres://postgres:postgres@localhost:5432/chatup` - database url;
 - `REDIS_URL`, `default=redis://localhost:6379` - redis url;
-- `CUP_HOST`, `default=http://127.0.0.1:8000` - hostname with a schema;
-- `CUP_DEFAULT_LANG`, `default=en` - api default language;
+- `CH_HOST`, `default=http://127.0.0.1:8000` - hostname with a schema;
+- `CH_DEFAULT_LANG`, `default=en` - api default language;
 
 ## Documentation
 

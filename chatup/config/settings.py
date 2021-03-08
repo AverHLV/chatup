@@ -16,9 +16,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = get_random_secret_key()
 
-DEBUG = environ.get('CUP_DEBUG', 'true') == 'true'
+DEBUG = environ.get('CH_DEBUG', 'true') == 'true'
 
-ALLOWED_HOSTS = environ.get('CUP_ALLOWED_HOSTS', '*').split(',')
+ALLOWED_HOSTS = environ.get('CH_ALLOWED_HOSTS', '*').split(',')
 
 ROOT_URLCONF = 'config.urls'
 
@@ -131,7 +131,7 @@ SESSION_COOKIE_AGE = 3600 * 12
 
 # REST API
 
-REST_API_HOST = urlparse(environ.get('CUP_HOST', DEFAULT_HOST))
+REST_API_HOST = urlparse(environ.get('CH_HOST', DEFAULT_HOST))
 REST_API_USE_HTTPS = REST_API_HOST.scheme == 'https'
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -231,7 +231,7 @@ LANGUAGES = (
     ('ru', _('Russian')),
 )
 
-default_lang = environ.get('CUP_DEFAULT_LANG', 'en')
+default_lang = environ.get('CH_DEFAULT_LANG', 'en')
 if default_lang not in (lang[0] for lang in LANGUAGES):
     raise ImproperlyConfigured(f'Specified default language not supported: {default_lang}')
 
