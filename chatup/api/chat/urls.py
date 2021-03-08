@@ -21,7 +21,6 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += [
         path('ws/rooms/', TemplateView.as_view(template_name='rooms.html'), name='rooms'),
-
         path('ws/rooms/<int:id>/', TemplateView.as_view(
             template_name='room.html',
             extra_context={'use_https': settings.REST_API_USE_HTTPS}

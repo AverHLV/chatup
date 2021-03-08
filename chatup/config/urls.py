@@ -21,7 +21,7 @@ urlpatterns = [
 if settings.DEBUG:
     schema_view = get_schema_view(
         openapi.Info(title='ChatUP API', default_version='v1'),
-        url=settings.REST_API_DOCS_URL,
+        url=f'{settings.REST_API_HOST.scheme}://{settings.REST_API_HOST.netloc}',
         public=True,
         permission_classes=(AllowAny,),
     )

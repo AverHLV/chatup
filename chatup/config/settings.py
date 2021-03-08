@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 DEFAULT_DB_URL = 'postgres://postgres:postgres@localhost:5432/chatup'
 DEFAULT_REDIS_URL = 'redis://localhost:6379'
-DEFAULT_DOCS_URL = 'http://127.0.0.1:8000/api/docs/'
+DEFAULT_HOST = 'http://127.0.0.1:8000'
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -18,7 +18,7 @@ SECRET_KEY = get_random_secret_key()
 
 DEBUG = environ.get('CUP_DEBUG', 'true') == 'true'
 
-ALLOWED_HOSTS = environ.get('CUP_HOSTS', '*').split(',')
+ALLOWED_HOSTS = environ.get('CUP_ALLOWED_HOSTS', '*').split(',')
 
 ROOT_URLCONF = 'config.urls'
 
@@ -131,9 +131,8 @@ SESSION_COOKIE_AGE = 3600 * 12
 
 # REST API
 
-REST_API_DOCS_URL = environ.get('CUP_DOCS_URL', DEFAULT_DOCS_URL)
-
-REST_API_USE_HTTPS = environ.get('CUP_USE_HTTPS', 'false') == 'true'
+REST_API_HOST = urlparse(environ.get('CUP_HOST', DEFAULT_HOST))
+REST_API_USE_HTTPS = REST_API_HOST.scheme == 'https'
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True

@@ -40,11 +40,10 @@ Log in with credentials `admin / admin` or `streamer / streamer`.
 ## Environment variables
 
 - `CUP_DEBUG`, `default=true` - whether DEBUG mode should be enabled;
-- `CUP_HOSTS`, `default=*` - allowed hosts list, separated by a comma;
+- `CUP_ALLOWED_HOSTS`, `default=*` - allowed hosts list, separated by a comma;
 - `DATABASE_URL`, `default=postgres://postgres:postgres@localhost:5432/chatup` - database url;
 - `REDIS_URL`, `default=redis://localhost:6379` - redis url;
-- `CUP_DOCS_URL`, `default=http://127.0.0.1:8000/api/docs/` - absolute URL for swagger docs.
-- `CUP_USE_HTTPS`, `default=false` - whether to use HTTPS in swagger view;
+- `CUP_HOST`, `default=http://127.0.0.1:8000` - hostname with a schema;
 - `CUP_DEFAULT_LANG`, `default=en` - api default language;
 
 ## Documentation
