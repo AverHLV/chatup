@@ -252,3 +252,12 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
 STATICFILES_DIRS = BASE_DIR / 'ui',
+
+# Custom images
+
+IMAGE_SIZES = {
+    'smiley': (28, 28),
+    'icon': (18, 18),
+    'badge': (18, 18),
+    'custom': None
+}

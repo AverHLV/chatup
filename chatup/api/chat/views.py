@@ -12,7 +12,6 @@ from drf_yasg.utils import swagger_auto_schema
 from itertools import groupby
 from operator import attrgetter
 
-from .management.utils import encode_image
 from . import models, serializers, permissions as own_permissions
 
 author_param = openapi.Parameter(
@@ -186,28 +185,21 @@ class BroadcastViewSet(ModelViewSetBase):
         })
 
 
-class ImageView(APIView):
+class ImageViewSet(viewsets.ModelViewSet):
     """ Get images info """
 
+    queryset = models.Image.objects.all()
+    serializer_class = serializers.ImageSerializer
     parser_classes = FormParser, MultiPartParser
-    permission_classes = permissions.IsAuthenticatedOrReadOnly, own_permissions.IsStreamer
-
-    @swagger_auto_schema(responses={'200': serializers.ImageSerializer})
-    def get(self, request):
-        images = models.Image.objects.all()
-        serializer = serializers.ImageSerializer(images, many=True)
-        return Response(serializer.data)
+    permission_classes = permissions.AllowAny,
 
     @swagger_auto_schema(
         request_body=serializers.ImageFieldSerializer,
         responses={'200': serializers.ImageSerializer}
     )
-    def post(self, request):
-        encoded_image = encode_image(request.data, size=(28, 28))
-        request.data['image'] = encoded_image
-
-        serializer = serializers.ImageSerializer(data=request.data)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        self.perform_create(serializer)
 
         return Response(serializer.data)

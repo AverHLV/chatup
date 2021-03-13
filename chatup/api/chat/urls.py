@@ -8,12 +8,12 @@ from . import views
 
 router = DefaultRouter()
 router.register(r'broadcasts', views.BroadcastViewSet)
+router.register(r'images', views.ImageViewSet)
 
 urlpatterns = [
     path('roles/', views.RoleView.as_view()),
     path('general/lang/', views.LangView.as_view()),
     path('general/user/', views.UserView.as_view()),
-    path('general/image/', views.ImageView.as_view()),
     *router.urls,
 ]
 

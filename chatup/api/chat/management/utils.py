@@ -2,7 +2,6 @@ from django.conf import settings
 from django.core.management.base import CommandError
 from PIL import Image, ImageSequence
 
-import base64
 from io import BytesIO
 from uuid import uuid4
 from random import choice
@@ -75,12 +74,12 @@ def create_messages(count: int) -> list:
     return messages
 
 
-def encode_image(data: dict, size: tuple) -> bytes:
-    """ Encodes image data into bytes depending on its extension """
+def resize_image(file: BytesIO, size: tuple) -> BytesIO:
+    """ Resize image data depending on its extension """
 
-    image = Image.open(data['image'])
+    image = Image.open(file)
     ext = image.format
-    buffer = BytesIO()
+    resized_image_buffer = BytesIO()
 
     def _thumbnails(_frames, _size):
         for frame in _frames:
@@ -92,10 +91,9 @@ def encode_image(data: dict, size: tuple) -> bytes:
         frames = ImageSequence.Iterator(image)
         frames = _thumbnails(frames, size)
         image = next(frames)
-        image.save(buffer, format=ext, save_all=True, append_images=list(frames), loop=0)
+        image.save(resized_image_buffer, format=ext, save_all=True, append_images=list(frames), loop=0)
     else:
         image = image.resize(size)
-        image.save(buffer, format=ext)
+        image.save(resized_image_buffer, format=ext)
 
-    encoded_image = base64.b64encode(buffer.getvalue())
-    return encoded_image
+    return resized_image_buffer

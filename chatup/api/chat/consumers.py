@@ -1,5 +1,3 @@
-import re
-
 from django.db.transaction import atomic
 from django.utils.translation import gettext as _
 
@@ -174,22 +172,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         if message['type'] == self.event_types.CREATE_MESSAGE:
             await self.create_message(message['content'])
 
-    @database_sync_to_async
-    @atomic
-    def get_available_images(self):
-        available_images = self.scope['user'].available_images.values_list('pk', flat=True)
-        return set(available_images)
-
-    async def check_images(self, text):
-        """ Check text of the message for presence of pictures inaccessible to the user """
-
-        posted_images = {int(image[8:-1]) for image in re.findall("{img_id:\\d+}", text)}
-        if not posted_images:
-            return False
-
-        available_images = await self.get_available_images()
-        return len(posted_images - available_images)
-
     async def is_valid(self, message: dict) -> bool:
         """ Validate basic structure of received WS message """
 
@@ -200,10 +182,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         elif message['type'] not in self.event_types:
             response = {'type': self.event_types.ERROR, 'content':  _('Invalid message type.')}
-
-        if str(self.scope['user'].role) not in ('streamer', 'administrator') \
-                and await self.check_images(message['content']['text']):
-            response = {'type': self.event_types.ERROR, 'content': _('Insufficient rights to submit image.')}
 
         if response is None:
             return True

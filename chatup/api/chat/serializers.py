@@ -3,7 +3,8 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from api.abstract.serializers import TranslatedModelSerializer
+from api.abstract.serializers import TranslatedModelSerializer, BinaryImageField
+from config.settings import IMAGE_SIZES
 from . import models
 
 USER_PUBLIC_FIELDS = 'id', 'username', 'watchtime', 'username_color', 'role', 'role_icon'
@@ -23,10 +24,24 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = 'id', 'watchtime', 'role', 'role_icon'
 
 
+class CustomBinaryImageField(BinaryImageField):
+    """
+    In-memory image objects are resized based on image type
+    and serialized into binary data.
+    """
+    def to_internal_value(self, data, **kwargs):
+        image_type = self.context['request'].data['type']
+        image_size = IMAGE_SIZES[image_type]
+
+        return super(CustomBinaryImageField, self).to_internal_value(data, resize=image_size)
+
+
 class ImageSerializer(serializers.ModelSerializer):
+    image = CustomBinaryImageField()
+
     class Meta:
         model = models.Image
-        fields = 'id', 'image', 'type', 'description', 'exclusive_access_role'
+        fields = 'id', 'image', 'type', 'description', 'role'
 
 
 class ImageFieldSerializer(ImageSerializer):

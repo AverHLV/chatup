@@ -9,10 +9,9 @@ from api.abstract.models import TimeStamped, NameTranslation
 
 IMAGE_TYPES = (
     ('smiley', 'Smiley'),
-    ('role', 'Role'),
-    ('experience', 'Experience'),
-    ('status', 'Status'),
-    ('event', 'Event'),
+    ('icon', 'Icon'),
+    ('badge', 'Badge'),
+    ('custom', 'Custom')
 )
 
 ROLE_ICONS = {
@@ -22,6 +21,16 @@ ROLE_ICONS = {
     'administrator': 4,
     'streamer': 5
 }
+
+
+class RoleQuerySet(models.QuerySet):
+    def prefetch_icon(self, to_attr='icon'):
+        prefetch = models.Prefetch('images', queryset=Image.objects.filter(type='icon'), to_attr=to_attr)
+        return self.prefetch_related(prefetch)
+
+    def prefetch_smiles(self, to_attr='smiles'):
+        prefetch = models.Prefetch('images', queryset=Image.objects.filter(type='smile'), to_attr=to_attr)
+        return self.prefetch_related(prefetch)
 
 
 class Role(NameTranslation):
@@ -42,6 +51,8 @@ class Role(NameTranslation):
 
     sid = models.CharField(max_length=20, unique=True, choices=SIDS)
 
+    objects = RoleQuerySet.as_manager()
+
     class Meta:
         db_table = 'roles'
         verbose_name = _('role')
@@ -52,16 +63,12 @@ class Role(NameTranslation):
 
 
 class Image(models.Model):
-    """
-    Image model
+    """ Image model """
 
-    exclusive_access_role: permanent access for specified role
-    """
-
-    image = models.BinaryField(blank=True, null=True, editable=True)
-    type = models.CharField(choices=IMAGE_TYPES, max_length=20)
-    description = models.CharField(blank=True, null=True, max_length=1000)
-    exclusive_access_role = models.CharField(choices=Role.SIDS, null=True, max_length=20)
+    image = models.BinaryField()
+    type = models.CharField(choices=IMAGE_TYPES, max_length=30)
+    description = models.CharField(null=True, max_length=300)
+    role = models.ForeignKey(Role, null=True, on_delete=models.PROTECT, related_name='images')
 
     class Meta:
         db_table = 'images'
@@ -113,14 +120,14 @@ class User(AbstractUser):
 
     role_icon = models.ForeignKey(
         Image,
-        on_delete=models.PROTECT,
-        blank=True,
+        on_delete=models.SET_NULL,
         null=True
     )
 
-    @property
-    def available_images(self):
-        return Image.objects.filter(exclusive_access_role=self.role.sid)
+    custom_images = models.ManyToManyField(
+        Image,
+        related_name='custom_access'
+    )
 
     objects = CustomUserManager()
 
@@ -131,12 +138,6 @@ class User(AbstractUser):
 
     def __str__(self):
         return f'{self.pk}: {self.username}'
-
-    def save(self, *args, **kwargs):
-        if not self.role_icon:
-            self.role_icon = Image.objects.get(pk=ROLE_ICONS[self.role.sid])
-
-        super().save(*args, **kwargs)
 
 
 class Broadcast(TimeStamped):
