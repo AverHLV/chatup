@@ -1,10 +1,11 @@
+from django.conf import settings
+
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from api.abstract.serializers import TranslatedModelSerializer, BinaryImageField
-from config.settings import IMAGE_SIZES
 from . import models
 
 USER_PUBLIC_FIELDS = 'id', 'username', 'watchtime', 'username_color', 'role', 'role_icon'
@@ -31,7 +32,7 @@ class CustomBinaryImageField(BinaryImageField):
     """
     def to_internal_value(self, data, **kwargs):
         image_type = self.context['request'].data['type']
-        image_size = IMAGE_SIZES[image_type]
+        image_size = settings.IMAGE_SIZES[image_type]
 
         return super(CustomBinaryImageField, self).to_internal_value(data, resize=image_size)
 
@@ -41,11 +42,30 @@ class ImageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Image
-        fields = 'id', 'image', 'type', 'description', 'role'
+        fields = 'id', 'image', 'type', 'description', 'role', 'users'
+        extra_kwargs = {'users': {'source': 'custom_owners', 'required': False}}
 
+    def validate(self, data):
+        if self.context['request'].method in ['POST', 'PUT'] \
+                and data.get('type') == 'custom' \
+                and not data.get('users'):
+            raise ValidationError({'users': _('Field users is required for specified type and method.')})
 
-class ImageFieldSerializer(ImageSerializer):
-    image = serializers.ImageField()
+        return data
+
+    def validate_image(self, value):
+        image_type = self.context['request'].data.get('type') or self.instance.type
+        if image_type in ['icon', 'smiley']:
+            role = self.context['request'].data.get('role')
+            if not role:
+                raise ValidationError({'role': _('Field role is required for specified type.')})
+
+            if image_type == 'icon':
+                icon_exists = models.Image.objects.filter(type=image_type, role=role).exists()
+                if icon_exists:
+                    raise ValidationError({'type': _('You can have only one icon per role.')})
+
+        return value
 
 
 class UserPublicSerializer(UserSerializer):

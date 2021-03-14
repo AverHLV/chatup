@@ -4,7 +4,6 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import generics, viewsets, permissions, status
 from rest_framework.views import APIView, Response
 from rest_framework.decorators import action
-from rest_framework.parsers import FormParser, MultiPartParser
 
 from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
@@ -190,16 +189,4 @@ class ImageViewSet(viewsets.ModelViewSet):
 
     queryset = models.Image.objects.all()
     serializer_class = serializers.ImageSerializer
-    parser_classes = FormParser, MultiPartParser
-    permission_classes = permissions.AllowAny,
-
-    @swagger_auto_schema(
-        request_body=serializers.ImageFieldSerializer,
-        responses={'200': serializers.ImageSerializer}
-    )
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-
-        return Response(serializer.data)
+    permission_classes = own_permissions.IsStreamer,

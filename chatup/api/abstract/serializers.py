@@ -1,3 +1,5 @@
+import base64
+
 from django.conf import settings
 from django.utils.functional import cached_property
 from django.utils.translation import get_language_from_request, gettext_lazy as _
@@ -6,9 +8,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from PIL import Image
-import base64
+from io import BytesIO
 
-from api.chat.management.utils import resize_image
+from .utils import resize_image
 
 
 class TranslatedModelSerializer(serializers.ModelSerializer):
@@ -56,12 +58,15 @@ class BinaryImageField(serializers.Field):
         return base64.b64encode(value)
 
     def to_internal_value(self, data, resize=None):
+        decoded_image = base64.b64decode(data)
+        image_buffer = BytesIO(decoded_image)
+
         try:
-            Image.open(data.file).verify()
+            Image.open(image_buffer).verify()
         except Exception:
             raise ValidationError(self.custom_error_messages['invalid_image'])
 
         if resize:
-            return resize_image(data.file, resize).getvalue()
+            return resize_image(image_buffer, resize).getvalue()
 
-        return data.file.getvalue()
+        return image_buffer.getvalue()

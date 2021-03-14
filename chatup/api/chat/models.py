@@ -7,21 +7,6 @@ from model_utils import Choices
 
 from api.abstract.models import TimeStamped, NameTranslation
 
-IMAGE_TYPES = (
-    ('smiley', 'Smiley'),
-    ('icon', 'Icon'),
-    ('badge', 'Badge'),
-    ('custom', 'Custom')
-)
-
-ROLE_ICONS = {
-    'user': 1,
-    'vip': 2,
-    'moderator': 3,
-    'administrator': 4,
-    'streamer': 5
-}
-
 
 class RoleQuerySet(models.QuerySet):
     def prefetch_icon(self, to_attr='icon'):
@@ -41,12 +26,20 @@ class Role(NameTranslation):
     sid: role string identifier
     """
 
+    ICONS = {
+        'user': 1,
+        'vip': 2,
+        'moderator': 3,
+        'administrator': 4,
+        'streamer': 5
+    }
+
     SIDS = Choices(
-        ('user', 'User'),
-        ('vip', 'VIP'),
-        ('moderator', 'Moderator'),
-        ('administrator', 'Administrator'),
-        ('streamer', 'Streamer'),
+        ('user', 'USER', 'User'),
+        ('vip', 'VIP', 'VIP'),
+        ('moderator', 'MODERATOR', 'Moderator'),
+        ('administrator', 'ADMINISTRATOR', 'Administrator'),
+        ('streamer', 'STREAMER', 'Streamer'),
     )
 
     sid = models.CharField(max_length=20, unique=True, choices=SIDS)
@@ -65,6 +58,13 @@ class Role(NameTranslation):
 class Image(models.Model):
     """ Image model """
 
+    IMAGE_TYPES = Choices(
+        ('smiley', 'SMILEY', 'Smiley'),
+        ('icon', 'ICON', 'Icon'),
+        ('badge', 'BADGE', 'Badge'),
+        ('custom', 'CUSTOM', 'Custom'),
+    )
+
     image = models.BinaryField()
     type = models.CharField(choices=IMAGE_TYPES, max_length=30)
     description = models.CharField(null=True, max_length=300)
@@ -74,7 +74,7 @@ class Image(models.Model):
         db_table = 'images'
 
     def __str__(self):
-        return self.description
+        return f'{self.pk}: {self.type}'
 
 
 class CustomUserManager(UserManager):
@@ -126,7 +126,7 @@ class User(AbstractUser):
 
     custom_images = models.ManyToManyField(
         Image,
-        related_name='custom_access'
+        related_name='custom_owners'
     )
 
     objects = CustomUserManager()

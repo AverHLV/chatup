@@ -259,5 +259,5 @@ IMAGE_SIZES = {
     'smiley': (28, 28),
     'icon': (18, 18),
     'badge': (18, 18),
-    'custom': None
+    'custom': (30, 30)
 }
