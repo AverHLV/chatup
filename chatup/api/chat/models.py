@@ -8,13 +8,42 @@ from model_utils import Choices
 from api.abstract.models import TimeStamped, NameTranslation
 
 
+class Image(models.Model):
+    """ Image model """
+
+    TYPES = Choices(
+        ('smiley', 'SMILEY', 'Smiley'),
+        ('icon', 'ICON', 'Icon'),
+        ('badge', 'BADGE', 'Badge'),
+        ('custom', 'CUSTOM', 'Custom'),
+    )
+
+    SIZES = {
+        TYPES.SMILEY: (28, 28),
+        TYPES.ICON: (18, 18),
+        TYPES.BADGE: (18, 18),
+        TYPES.CUSTOM: (30, 30)
+    }
+
+    image = models.BinaryField()
+    type = models.CharField(choices=TYPES, max_length=30)
+    description = models.CharField(null=True, max_length=300)
+    role = models.ForeignKey('Role', null=True, on_delete=models.PROTECT, related_name='images')
+
+    class Meta:
+        db_table = 'images'
+
+    def __str__(self):
+        return f'{self.pk}: {self.type}'
+
+
 class RoleQuerySet(models.QuerySet):
     def prefetch_icon(self, to_attr='icon'):
-        prefetch = models.Prefetch('images', queryset=Image.objects.filter(type='icon'), to_attr=to_attr)
+        prefetch = models.Prefetch('images', queryset=Image.objects.filter(type=Image.TYPES.ICON), to_attr=to_attr)
         return self.prefetch_related(prefetch)
 
     def prefetch_smiles(self, to_attr='smiles'):
-        prefetch = models.Prefetch('images', queryset=Image.objects.filter(type='smile'), to_attr=to_attr)
+        prefetch = models.Prefetch('images', queryset=Image.objects.filter(type=Image.TYPES.SMILEY), to_attr=to_attr)
         return self.prefetch_related(prefetch)
 
 
@@ -25,14 +54,6 @@ class Role(NameTranslation):
     name: user-friendly multi-language sid representation
     sid: role string identifier
     """
-
-    ICONS = {
-        'user': 1,
-        'vip': 2,
-        'moderator': 3,
-        'administrator': 4,
-        'streamer': 5
-    }
 
     SIDS = Choices(
         ('user', 'USER', 'User'),
@@ -53,28 +74,6 @@ class Role(NameTranslation):
 
     def __str__(self):
         return self.sid
-
-
-class Image(models.Model):
-    """ Image model """
-
-    IMAGE_TYPES = Choices(
-        ('smiley', 'SMILEY', 'Smiley'),
-        ('icon', 'ICON', 'Icon'),
-        ('badge', 'BADGE', 'Badge'),
-        ('custom', 'CUSTOM', 'Custom'),
-    )
-
-    image = models.BinaryField()
-    type = models.CharField(choices=IMAGE_TYPES, max_length=30)
-    description = models.CharField(null=True, max_length=300)
-    role = models.ForeignKey(Role, null=True, on_delete=models.PROTECT, related_name='images')
-
-    class Meta:
-        db_table = 'images'
-
-    def __str__(self):
-        return f'{self.pk}: {self.type}'
 
 
 class CustomUserManager(UserManager):

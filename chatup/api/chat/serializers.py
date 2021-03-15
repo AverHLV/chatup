@@ -22,7 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.User
         fields = USER_FIELDS
-        read_only_fields = 'id', 'watchtime', 'role', 'role_icon'
+        read_only_fields = 'id', 'watchtime', 'role'
 
 
 class CustomBinaryImageField(BinaryImageField):
@@ -32,7 +32,7 @@ class CustomBinaryImageField(BinaryImageField):
     """
     def to_internal_value(self, data, **kwargs):
         image_type = self.context['request'].data['type']
-        image_size = settings.IMAGE_SIZES[image_type]
+        image_size = models.Image.SIZES[image_type]
 
         return super(CustomBinaryImageField, self).to_internal_value(data, resize=image_size)
 
@@ -45,27 +45,34 @@ class ImageSerializer(serializers.ModelSerializer):
         fields = 'id', 'image', 'type', 'description', 'role', 'users'
         extra_kwargs = {'users': {'source': 'custom_owners', 'required': False}}
 
-    def validate(self, data):
-        if self.context['request'].method in ['POST', 'PUT'] \
-                and data.get('type') == 'custom' \
-                and not data.get('users'):
-            raise ValidationError({'users': _('Field users is required for specified type and method.')})
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.context['request'].method in ['PUT', 'PATCH']:
+            self.fields['type'].read_only = True
 
-        return data
+    def validate(self, attrs):
+        image_type = attrs.get('type') or self.instance.type
 
-    def validate_image(self, value):
-        image_type = self.context['request'].data.get('type') or self.instance.type
-        if image_type in ['icon', 'smiley']:
-            role = self.context['request'].data.get('role')
+        if image_type == models.Image.TYPES.CUSTOM:
+            image_owners = attrs.get('custom_owners') or self.instance.custom_owners \
+                if self.context['request'].method in ['PUT', 'PATCH'] \
+                else attrs.get('custom_owners')
+            if not image_owners:
+                raise ValidationError({'users': _('Field is required for specified type.')})
+        elif attrs.get('custom_owners'):
+            raise ValidationError({'users': _('Field is not allowed for specified type.')})
+
+        if image_type in [models.Image.TYPES.ICON, models.Image.TYPES.SMILEY]:
+            role = attrs.get('role') or self.instance.role
             if not role:
                 raise ValidationError({'role': _('Field role is required for specified type.')})
 
-            if image_type == 'icon':
+            if image_type == models.Image.TYPES.ICON:
                 icon_exists = models.Image.objects.filter(type=image_type, role=role).exists()
                 if icon_exists:
                     raise ValidationError({'type': _('You can have only one icon per role.')})
 
-        return value
+        return attrs
 
 
 class UserPublicSerializer(UserSerializer):
