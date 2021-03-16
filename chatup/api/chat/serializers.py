@@ -1,14 +1,14 @@
-from django.conf import settings
-
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import SAFE_METHODS
 
 from api.abstract.serializers import TranslatedModelSerializer, BinaryImageField
 from . import models
 
-USER_PUBLIC_FIELDS = 'id', 'username', 'watchtime', 'username_color', 'role', 'role_icon'
+UPDATE_METHODS = 'PUT', 'PATCH'
+USER_PUBLIC_FIELDS = 'id', 'username', 'watchtime', 'username_color', 'role'
 USER_FIELDS = USER_PUBLIC_FIELDS + ('email',)
 
 
@@ -30,6 +30,7 @@ class CustomBinaryImageField(BinaryImageField):
     In-memory image objects are resized based on image type
     and serialized into binary data.
     """
+
     def to_internal_value(self, data, **kwargs):
         image_type = self.context['request'].data['type']
         image_size = models.Image.SIZES[image_type]
@@ -47,32 +48,47 @@ class ImageSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if self.context['request'].method in ['PUT', 'PATCH']:
+        request = self.context['request']
+        user_role = getattr(request.user, 'role', None)
+
+        if request.method in UPDATE_METHODS:
             self.fields['type'].read_only = True
+        elif request.method in SAFE_METHODS and (
+            not user_role or user_role.sid not in (models.Role.SIDS.administrator, models.Role.SIDS.streamer)
+        ):
+            self.fields.pop('users')
 
     def validate(self, attrs):
         image_type = attrs.get('type') or self.instance.type
+        is_custom = image_type == models.Image.TYPES.CUSTOM
+        is_role_related = image_type in {models.Image.TYPES.ICON, models.Image.TYPES.SMILEY}
 
-        if image_type == models.Image.TYPES.CUSTOM:
-            image_owners = attrs.get('custom_owners') or self.instance.custom_owners \
-                if self.context['request'].method in ['PUT', 'PATCH'] \
-                else attrs.get('custom_owners')
-            if not image_owners:
-                raise ValidationError({'users': _('Field is required for specified type.')})
-        elif attrs.get('custom_owners'):
-            raise ValidationError({'users': _('Field is not allowed for specified type.')})
+        if self.context['request'].method in UPDATE_METHODS:
+            if not is_custom:
+                attrs.pop('users', None)
+            if not is_role_related:
+                attrs.pop('role', None)
+            else:
+                role = attrs.get('role')
+                if role and self.check_icon(image_type, role.id):
+                    raise ValidationError({'type': _('You can have only one icon per role.')})
 
-        if image_type in [models.Image.TYPES.ICON, models.Image.TYPES.SMILEY]:
-            role = attrs.get('role') or self.instance.role
-            if not role:
-                raise ValidationError({'role': _('Field role is required for specified type.')})
+        else:
+            if is_custom and not attrs.get('users'):
+                raise ValidationError({'users': _('This field is required.')})
+            elif is_role_related:
+                role = attrs.get('role')
+                if not role:
+                    raise ValidationError({'role': _('This field is required.')})
 
-            if image_type == models.Image.TYPES.ICON:
-                icon_exists = models.Image.objects.filter(type=image_type, role=role).exists()
-                if icon_exists:
+                if self.check_icon(image_type, role.id):
                     raise ValidationError({'type': _('You can have only one icon per role.')})
 
         return attrs
+
+    @staticmethod
+    def check_icon(image_type: str, role_id: int) -> bool:
+        return models.Image.objects.filter(type=image_type, role_id=role_id).exists()
 
 
 class UserPublicSerializer(UserSerializer):

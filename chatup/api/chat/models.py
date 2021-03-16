@@ -9,8 +9,6 @@ from api.abstract.models import TimeStamped, NameTranslation
 
 
 class Image(models.Model):
-    """ Image model """
-
     TYPES = Choices(
         ('smiley', 'SMILEY', 'Smiley'),
         ('icon', 'ICON', 'Icon'),
@@ -22,13 +20,13 @@ class Image(models.Model):
         TYPES.SMILEY: (28, 28),
         TYPES.ICON: (18, 18),
         TYPES.BADGE: (18, 18),
-        TYPES.CUSTOM: (30, 30)
+        TYPES.CUSTOM: (30, 30),
     }
 
     image = models.BinaryField()
     type = models.CharField(choices=TYPES, max_length=30)
-    description = models.CharField(null=True, max_length=300)
-    role = models.ForeignKey('Role', null=True, on_delete=models.PROTECT, related_name='images')
+    description = models.CharField(blank=True, null=True, max_length=300)
+    role = models.ForeignKey('Role', null=True, on_delete=models.CASCADE, related_name='images')
 
     class Meta:
         db_table = 'images'
@@ -56,11 +54,11 @@ class Role(NameTranslation):
     """
 
     SIDS = Choices(
-        ('user', 'USER', 'User'),
-        ('vip', 'VIP', 'VIP'),
-        ('moderator', 'MODERATOR', 'Moderator'),
-        ('administrator', 'ADMINISTRATOR', 'Administrator'),
-        ('streamer', 'STREAMER', 'Streamer'),
+        ('user', 'User'),
+        ('vip', 'VIP'),
+        ('moderator', 'Moderator'),
+        ('administrator', 'Administrator'),
+        ('streamer', 'Streamer'),
     )
 
     sid = models.CharField(max_length=20, unique=True, choices=SIDS)
@@ -117,16 +115,8 @@ class User(AbstractUser):
         related_name='users'
     )
 
-    role_icon = models.ForeignKey(
-        Image,
-        on_delete=models.SET_NULL,
-        null=True
-    )
-
-    custom_images = models.ManyToManyField(
-        Image,
-        related_name='custom_owners'
-    )
+    role_icon = models.ForeignKey(Image, on_delete=models.SET_NULL, null=True)
+    custom_images = models.ManyToManyField(Image, related_name='custom_owners')
 
     objects = CustomUserManager()
 
@@ -180,7 +170,7 @@ class Broadcast(TimeStamped):
         indexes = models.Index(fields=['created']),
 
     def __str__(self):
-        return self.title[:20]
+        return f'{self.pk}: {self.title[:20]}'
 
 
 class BroadcastToUser(models.Model):
@@ -234,7 +224,7 @@ class Message(TimeStamped):
         indexes = models.Index(fields=['created']),
 
     def __str__(self):
-        return self.text[:20]
+        return f'{self.pk}: {self.text[:20]}'
 
     @property
     def is_deleted(self) -> bool:

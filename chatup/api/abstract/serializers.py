@@ -48,6 +48,7 @@ class TranslatedModelSerializer(serializers.ModelSerializer):
 
 class BinaryImageField(serializers.Field):
     """ In-memory image objects are serialized into binary data """
+
     custom_error_messages = {
         'invalid_image': _(
             'Upload a valid image. The file you uploaded was either not an image or a corrupted image.'

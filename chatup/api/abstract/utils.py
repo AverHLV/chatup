@@ -1,6 +1,6 @@
-from io import BytesIO
-
 from PIL import Image, ImageSequence
+
+from io import BytesIO
 
 
 def resize_image(file: BytesIO, size: tuple) -> BytesIO:
