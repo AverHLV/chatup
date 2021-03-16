@@ -9,14 +9,15 @@ from urllib.parse import urlparse
 DEFAULT_DB_URL = 'postgres://postgres:postgres@localhost:5432/chatup'
 DEFAULT_REDIS_URL = 'redis://localhost:6379'
 DEFAULT_HOST = 'http://127.0.0.1:8000'
+DEBUG_SECRET_KEY = 'secret'
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # General
 
-SECRET_KEY = get_random_secret_key()
-
 DEBUG = environ.get('CH_DEBUG', 'true') == 'true'
+
+SECRET_KEY = DEBUG_SECRET_KEY if DEBUG else get_random_secret_key()
 
 ALLOWED_HOSTS = environ.get('CH_ALLOWED_HOSTS', '*').split(',')
 
