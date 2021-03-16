@@ -1,8 +1,16 @@
+import base64
+
 from django.conf import settings
 from django.utils.functional import cached_property
-from django.utils.translation import get_language_from_request
+from django.utils.translation import get_language_from_request, gettext_lazy as _
 
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+
+from PIL import Image
+from io import BytesIO
+
+from .utils import resize_image
 
 
 class TranslatedModelSerializer(serializers.ModelSerializer):
@@ -36,3 +44,34 @@ class TranslatedModelSerializer(serializers.ModelSerializer):
             for field_name in self.fields
             if all(f'{field_name}_{lang[0]}' in field_names for lang in settings.LANGUAGES[1:])
         ]
+
+
+class BinaryImageField(serializers.Field):
+    """ In-memory image objects are serialized into binary data """
+
+    custom_error_messages = {
+        'invalid_image': _(
+            'Upload a valid image. The file you uploaded was either not an image or a corrupted image.'
+        ),
+    }
+
+    def to_representation(self, value):
+        return base64.b64encode(value)
+
+    def to_internal_value(self, data, resize=None):
+        try:
+            decoded_image = base64.b64decode(data)
+        except base64.binascii.Error:
+            raise ValidationError(self.custom_error_messages['invalid_image'])
+
+        image_buffer = BytesIO(decoded_image)
+
+        try:
+            Image.open(image_buffer).verify()
+        except Exception:
+            raise ValidationError(self.custom_error_messages['invalid_image'])
+
+        if resize:
+            return resize_image(image_buffer, resize).getvalue()
+
+        return image_buffer.getvalue()

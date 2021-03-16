@@ -5,6 +5,16 @@ from django.utils.translation import gettext_lazy as _
 from . import models
 
 
+class ImageUsersInline(admin.TabularInline):
+    model = models.Image.custom_owners.through
+
+
+@admin.register(models.Image)
+class ImageAdmin(admin.ModelAdmin):
+    search_fields = 'type', 'description'
+    inlines = ImageUsersInline,
+
+
 @admin.register(models.Role)
 class RoleAdmin(admin.ModelAdmin):
     search_fields = 'sid',
@@ -18,7 +28,7 @@ class CustomUserAdmin(UserAdmin):
 
 
 CustomUserAdmin.fieldsets += (_('Additional fields'), {
-    'fields': ('watchtime', 'username_color', 'role')
+    'fields': ('watchtime', 'username_color', 'role', 'role_icon')
 }),
 
 

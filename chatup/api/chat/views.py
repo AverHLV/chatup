@@ -182,3 +182,18 @@ class BroadcastViewSet(ModelViewSetBase):
                 role: result[role] for role, __ in reversed(models.Role.SIDS) if role in result
             }
         })
+
+
+class ImageViewSet(viewsets.ModelViewSet):
+    """ Get images info """
+
+    queryset = models.Image.objects.all()
+    serializer_class = serializers.ImageSerializer
+    permission_classes = own_permissions.IsStreamer,
+
+    def list(self, request, *args, **kwargs):
+        # don`t paginate queryset
+
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)

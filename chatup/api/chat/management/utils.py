@@ -1,8 +1,8 @@
 from django.conf import settings
 from django.core.management.base import CommandError
 
-from random import choice
 from uuid import uuid4
+from random import choice
 
 from .. import models
 

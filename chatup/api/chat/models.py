@@ -8,6 +8,43 @@ from model_utils import Choices
 from api.abstract.models import TimeStamped, NameTranslation
 
 
+class Image(models.Model):
+    TYPES = Choices(
+        ('smiley', 'SMILEY', 'Smiley'),
+        ('icon', 'ICON', 'Icon'),
+        ('badge', 'BADGE', 'Badge'),
+        ('custom', 'CUSTOM', 'Custom'),
+    )
+
+    SIZES = {
+        TYPES.SMILEY: (28, 28),
+        TYPES.ICON: (18, 18),
+        TYPES.BADGE: (18, 18),
+        TYPES.CUSTOM: (30, 30),
+    }
+
+    image = models.BinaryField()
+    type = models.CharField(choices=TYPES, max_length=30)
+    description = models.CharField(blank=True, null=True, max_length=300)
+    role = models.ForeignKey('Role', null=True, on_delete=models.CASCADE, related_name='images')
+
+    class Meta:
+        db_table = 'images'
+
+    def __str__(self):
+        return f'{self.pk}: {self.type}'
+
+
+class RoleQuerySet(models.QuerySet):
+    def prefetch_icon(self, to_attr='icon'):
+        prefetch = models.Prefetch('images', queryset=Image.objects.filter(type=Image.TYPES.ICON), to_attr=to_attr)
+        return self.prefetch_related(prefetch)
+
+    def prefetch_smiles(self, to_attr='smiles'):
+        prefetch = models.Prefetch('images', queryset=Image.objects.filter(type=Image.TYPES.SMILEY), to_attr=to_attr)
+        return self.prefetch_related(prefetch)
+
+
 class Role(NameTranslation):
     """
     User role model, defines user permissions
@@ -25,6 +62,8 @@ class Role(NameTranslation):
     )
 
     sid = models.CharField(max_length=20, unique=True, choices=SIDS)
+
+    objects = RoleQuerySet.as_manager()
 
     class Meta:
         db_table = 'roles'
@@ -75,6 +114,9 @@ class User(AbstractUser):
         on_delete=models.PROTECT,
         related_name='users'
     )
+
+    role_icon = models.ForeignKey(Image, on_delete=models.SET_NULL, null=True)
+    custom_images = models.ManyToManyField(Image, related_name='custom_owners')
 
     objects = CustomUserManager()
 
@@ -128,7 +170,7 @@ class Broadcast(TimeStamped):
         indexes = models.Index(fields=['created']),
 
     def __str__(self):
-        return self.title[:20]
+        return f'{self.pk}: {self.title[:20]}'
 
 
 class BroadcastToUser(models.Model):
@@ -182,7 +224,7 @@ class Message(TimeStamped):
         indexes = models.Index(fields=['created']),
 
     def __str__(self):
-        return self.text[:20]
+        return f'{self.pk}: {self.text[:20]}'
 
     @property
     def is_deleted(self) -> bool:
