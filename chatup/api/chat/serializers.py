@@ -76,7 +76,12 @@ class ImageSerializer(serializers.ModelSerializer):
         else:
             if is_custom and not attrs.get('users'):
                 raise ValidationError({'users': _('This field is required.')})
-            elif is_role_related:
+            elif not is_custom:
+                attrs.pop('users', None)
+
+            if not is_role_related:
+                attrs.pop('role', None)
+            else:
                 role = attrs.get('role')
                 if not role:
                     raise ValidationError({'role': _('This field is required.')})
