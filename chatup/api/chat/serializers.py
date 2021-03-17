@@ -107,7 +107,7 @@ class BroadcastSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Broadcast
-        exclude = 'watchers',
+        fields = '__all__'
 
     def validate_is_active(self, value: bool) -> bool:
         """ Allow only one active broadcast per streamer """
@@ -162,7 +162,7 @@ class MessageSerializer(serializers.ModelSerializer):
     def validate(self, attrs: dict) -> dict:
         # restore fields in ws case
 
-        if self.context is not None and isinstance(self.context['request'], dict):
+        if self.context and isinstance(self.context['request'], dict):
             self.fields['author'] = UserPublicSerializer()
             self.fields['deleter'] = UserPublicSerializer()
 

@@ -1,4 +1,3 @@
-from django.db.transaction import atomic
 from django.utils.translation import gettext as _
 
 from channels import exceptions
@@ -47,58 +46,32 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             raise exceptions.DenyConnection('User is not authenticated')
 
     @database_sync_to_async
-    @atomic
     def get_broadcast(self) -> tuple:
         """
-        Get broadcast and watchers count by url parameter, reject connection if not found,
+        Get broadcast and watchers count by url parameter, reject connection if not found
         else add current user as a watcher
 
-        :return: broadcast object, distinct count, whether to sent event (bool)
+        :return: broadcast, watchers count, whether to sent event (bool, None)
         :raises: DenyConnection
         """
 
-        try:
-            broadcast = models.Broadcast.objects \
-                .select_related('streamer') \
-                .select_for_update() \
-                .get(id=self.scope['url_route']['kwargs']['id'], is_active=True)
-
-        except models.Broadcast.DoesNotExist:
+        broadcast = models.Broadcast.objects.filter(id=int(self.broadcast_id), is_active=True).first()
+        if not broadcast:
             raise exceptions.DenyConnection('Broadcast not found')
-
-        watchers = list(broadcast.watchers.values_list('id', flat=True).distinct())
-        models.BroadcastToUser.objects.create(broadcast=broadcast, user=self.scope['user'])
-
-        if self.scope['user'].id in watchers:
-            count, send_to_group = len(watchers), False
-        else:
-            count, send_to_group = len(watchers) + 1, True
-
-        return broadcast, count, send_to_group
+        return (broadcast, *broadcast.change_watcher(self.scope['user'].id))
 
     @database_sync_to_async
-    @atomic
     def leave_broadcast(self):
         """
         Leave broadcast on disconnecting by removing current user from watchers,
         returns refreshed broadcast and watchers count
 
-        :return: broadcast object, distinct count, whether to sent event (bool)
+        :return: broadcast, watchers count, whether to sent event (bool, None)
         """
 
-        broadcast = models.Broadcast.objects \
-            .select_related('streamer') \
-            .select_for_update() \
-            .get(id=self.scope['broadcast'].id)
-
-        models.BroadcastToUser.objects \
-            .filter(broadcast_id=broadcast.id, user_id=self.scope['user'].id) \
-            .first() \
-            .delete()
-
-        watchers = broadcast.watchers.values_list('id', flat=True).distinct()
-        count = None if self.scope['user'].id in watchers else len(watchers)
-        return broadcast, count, True
+        broadcast = self.scope['broadcast']
+        broadcast.refresh_from_db(fields=['is_active'])
+        return (broadcast, *broadcast.change_watcher(self.scope['user'].id, add=False))
 
     async def send_watchers_count_update(
             self,
@@ -176,7 +149,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         """ 'create_message' type handler """
 
         message, errors = await self._create_message(content)
-
         if errors:
             await self.send_json({'type': self.EVENT_TYPES.ERROR, 'content': errors})
             return
@@ -194,10 +166,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         content['author'] = self.scope['user'].id
         content['broadcast'] = self.scope['broadcast'].id
         serializer = serializers.MessageSerializer(data=content, context={'request': self.scope})
-
         if not serializer.is_valid():
             return None, serializer.errors
-
         serializer.save()
         return serializer.data, None
 
