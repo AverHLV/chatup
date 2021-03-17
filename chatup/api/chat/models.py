@@ -1,8 +1,10 @@
 from django.db import models
 from django.core import validators
+from django.core.cache import cache
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.utils.translation import gettext_lazy as _
 
+from redis.exceptions import RedisError
 from model_utils import Choices
 
 from api.abstract.models import TimeStamped, NameTranslation
@@ -36,11 +38,11 @@ class Image(models.Model):
 
 
 class RoleQuerySet(models.QuerySet):
-    def prefetch_icon(self, to_attr='icon'):
+    def prefetch_icon(self, to_attr: str = 'icon'):
         prefetch = models.Prefetch('images', queryset=Image.objects.filter(type=Image.TYPES.ICON), to_attr=to_attr)
         return self.prefetch_related(prefetch)
 
-    def prefetch_smiles(self, to_attr='smiles'):
+    def prefetch_smiles(self, to_attr: str = 'smiles'):
         prefetch = models.Prefetch('images', queryset=Image.objects.filter(type=Image.TYPES.SMILEY), to_attr=to_attr)
         return self.prefetch_related(prefetch)
 
@@ -138,17 +140,12 @@ class Broadcast(TimeStamped):
     is_active: whether broadcast is active now, False by default
     source_link: absolute url to the broadcast source
     streamer: user who is streaming
-    watchers: users that watch the broadcast
     """
 
     title = models.CharField(unique=True, max_length=200)
     description = models.CharField(blank=True, null=True, max_length=1000)
     is_active = models.BooleanField(default=False, help_text=_('Whether broadcast is active now.'))
-
-    source_link = models.URLField(
-        verbose_name=_('source link'),
-        help_text=_('Link to broadcast source.')
-    )
+    source_link = models.URLField(verbose_name=_('source link'), help_text=_('Link to broadcast source.'))
 
     streamer = models.ForeignKey(
         User,
@@ -157,30 +154,81 @@ class Broadcast(TimeStamped):
         related_name='broadcasts'
     )
 
-    watchers = models.ManyToManyField(
-        User,
-        through='BroadcastToUser',
-        verbose_name=_('watchers')
-    )
-
     class Meta:
         db_table = 'broadcasts'
         verbose_name = _('broadcast')
         verbose_name_plural = _('broadcasts')
-        indexes = models.Index(fields=['created']),
+        indexes = models.Index(fields=['created', 'is_active']),
 
     def __str__(self):
         return f'{self.pk}: {self.title[:20]}'
 
+    @property
+    def watchers_key(self) -> str:
+        """ Retrieve broadcast watchers key for Redis """
 
-class BroadcastToUser(models.Model):
-    """ Custom many-to-many model that allows multiple relationships """
+        return f'BROADCAST_{self.id}_WATCHERS'
 
-    broadcast = models.ForeignKey(Broadcast, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.PROTECT)
+    @property
+    def watchers_lock_key(self) -> str:
+        """ Retrieve broadcast watchers lock key for Redis """
 
-    class Meta:
-        db_table = 'broadcasts_to_users'
+        return f'BROADCAST_{self.id}_WATCHERS_LOCK'
+
+    @property
+    def watchers(self) -> dict:
+        """
+        Retrieve watchers dictionary in format:
+            watcher_id: devices count
+        """
+
+        return cache.get(self.watchers_key, {}) if self.is_active else {}
+
+    @property
+    def watchers_count(self) -> int:
+        return len(self.watchers)
+
+    def change_watcher(self, watcher_id: int, add: bool = True) -> tuple:
+        """
+        Add new watcher to current broadcast watchers
+
+        :param watcher_id: user id
+        :param add: whether to add or delete given watcher
+        :return: current watchers count, whether to send an event (bool, None)
+        """
+
+        if not self.is_active:
+            return 0, False
+
+        send_event = False
+        lock = cache.lock(self.watchers_lock_key, thread_local=False)
+        lock.acquire()
+
+        try:
+            watchers = self.watchers
+            if watcher_id in watchers:
+                if add:
+                    watchers[watcher_id] += 1
+                elif watchers[watcher_id] > 1:
+                    watchers[watcher_id] -= 1
+                else:
+                    watchers.pop(watcher_id)
+                    send_event = True
+            elif add:
+                watchers[watcher_id] = 1
+                send_event = True
+            else:
+                return len(watchers), None
+
+            cache.set(self.watchers_key, watchers, timeout=None)
+            return len(watchers), send_event
+        except RedisError:
+            return 0, False
+        finally:
+            lock.release()
+
+    def clear_watchers(self) -> None:
+        cache.delete_pattern(self.watchers_key)
 
 
 class Message(TimeStamped):

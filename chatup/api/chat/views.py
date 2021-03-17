@@ -1,4 +1,6 @@
 from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.db.models import F
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import generics, viewsets, permissions, status
@@ -9,10 +11,11 @@ from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 
 from itertools import groupby
-from operator import attrgetter
 
 from ..abstract.views import ModelViewSetBase
 from . import models, serializers, permissions as own_permissions
+
+User = get_user_model()
 
 author_param = openapi.Parameter(
     'author_id',
@@ -34,7 +37,6 @@ class LangView(APIView):
             lang[0]: {'repr': lang[1], 'default': lang[0] == settings.LANGUAGE_CODE}
             for lang in settings.LANGUAGES
         }
-
         return Response({'cookie_name': settings.LANGUAGE_COOKIE_NAME, 'languages': data})
 
 
@@ -47,7 +49,6 @@ class UserView(APIView):
             request.user,
             context={'request': request, 'view': self}
         )
-
         return Response(serializer.data)
 
     @swagger_auto_schema(
@@ -61,10 +62,8 @@ class UserView(APIView):
             partial=True,
             context={'request': request, 'view': self}
         )
-
         serializer.is_valid(raise_exception=True)
         serializer.save()
-
         return Response(serializer.data)
 
 
@@ -78,7 +77,7 @@ class RoleView(generics.ListAPIView):
 class BroadcastViewSet(ModelViewSetBase):
     """ User broadcasts viewset """
 
-    queryset = models.Broadcast.objects.select_related('streamer').order_by('-created')
+    queryset = models.Broadcast.objects.select_related('streamer').order_by('-is_active', '-created')
     serializer_class = serializers.BroadcastSerializer
     permission_classes = permissions.IsAuthenticatedOrReadOnly, own_permissions.IsBroadcastStreamer
     filterset_fields = 'title', 'is_active', 'streamer_id'
@@ -110,15 +109,12 @@ class BroadcastViewSet(ModelViewSetBase):
 
         self.get_object()
         filters = self.get_filters(request)
-
         queryset = models.Message.objects \
             .filter(broadcast_id=pk) \
             .select_related('author', 'deleter') \
             .order_by('-created')
-
         if filters:
             queryset = queryset.filter(**filters)
-
         return self.list_response(queryset)
 
     @action(methods=['GET'], detail=True, permission_classes=[permissions.IsAuthenticated])
@@ -126,27 +122,27 @@ class BroadcastViewSet(ModelViewSetBase):
         """ Get broadcast watchers, grouped by roles """
 
         broadcast = self.get_object()
-
         if not broadcast.is_active:
             return Response(
                 {'detail': _('This broadcast is inactive.')},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        getter = attrgetter('role.sid')
-        users = broadcast.watchers.select_related('role').distinct()
+        watchers = tuple(broadcast.watchers.keys())
+        if not watchers:
+            users = []
+        else:
+            users = User.objects.filter(id__in=watchers).annotate(role_sid=F('role__sid'))
 
         result = {
             key: self.get_serializer(group, many=True).data
-            for key, group in groupby(users, key=getter)
+            for key, group in groupby(users, key=lambda x: x.role_sid)
         }
 
         # reorder by role sids
 
         return Response({
-            'result': {
-                role: result[role] for role, __ in reversed(models.Role.SIDS) if role in result
-            }
+            'result': {role: result[role] for role, __ in reversed(models.Role.SIDS) if role in result}
         })
 
 
