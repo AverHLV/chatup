@@ -39,6 +39,7 @@ Log in with credentials `admin / admin` or `streamer / streamer`.
 
 ## Environment variables
 
+- `CH_SECRET_KEY`, `default=secret` - project`s secret key, default value allowed only in DEBUG mode;
 - `CH_DEBUG`, `default=true` - whether DEBUG mode should be enabled;
 - `CH_ALLOWED_HOSTS`, `default=*` - allowed hosts list, separated by a comma;
 - `DATABASE_URL`, `default=postgres://postgres:postgres@localhost:5432/chatup` - database url;

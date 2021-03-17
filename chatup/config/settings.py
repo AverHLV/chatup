@@ -1,5 +1,4 @@
 from django.core.exceptions import ImproperlyConfigured
-from django.core.management.utils import get_random_secret_key
 from django.utils.translation import gettext_lazy as _
 
 from os import environ
@@ -15,9 +14,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # General
 
+SECRET_KEY = environ.get('CH_SECRET_KEY', DEBUG_SECRET_KEY)
+
 DEBUG = environ.get('CH_DEBUG', 'true') == 'true'
 
-SECRET_KEY = DEBUG_SECRET_KEY if DEBUG else get_random_secret_key()
+if not DEBUG and SECRET_KEY == DEBUG_SECRET_KEY:
+    raise ImproperlyConfigured('Debug mode disabled but default secret key used')
 
 ALLOWED_HOSTS = environ.get('CH_ALLOWED_HOSTS', '*').split(',')
 
