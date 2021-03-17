@@ -5,40 +5,9 @@ from channels import exceptions
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
+from model_utils import Choices
+
 from . import models, serializers
-
-
-class EventTypes:
-    """ Allowed event types container """
-
-    # input types
-
-    CREATE_MESSAGE = 'create_message'
-    DELETE_MESSAGE = 'delete_message'
-    UPDATE_WATCH_TIME = 'update_watch_time'
-
-    # other
-
-    ERROR = 'error'
-    SEND_MESSAGE = 'send_message'
-    CLOSE_BROADCAST = 'close_broadcast'
-    UPDATE_WATCHERS_COUNT = 'update_watchers_count'
-
-    _types = (
-        CREATE_MESSAGE,
-        DELETE_MESSAGE,
-        UPDATE_WATCH_TIME,
-    )
-
-    def __contains__(self, item: str) -> bool:
-        """
-        Check that item is an allowed event type
-
-        :raises: AssertionError
-        """
-
-        assert isinstance(item, str), 'Item should be a string'
-        return item in self._types
 
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):
@@ -47,7 +16,21 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     and sends them to other room members
     """
 
-    event_types = EventTypes()
+    EVENT_TYPES = Choices(
+        ('create_message', 'CREATE_MESSAGE', 'Create message'),
+        ('delete_message', 'DELETE_MESSAGE', 'Delete message'),
+        ('update_watch_time', 'UPDATE_WATCH_TIME', 'Update watch time'),
+        ('error', 'ERROR', 'Error'),
+        ('send_message', 'SEND_MESSAGE', 'Send message'),
+        ('close_broadcast', 'CLOSE_BROADCAST', 'Close broadcast'),
+        ('update_watchers_count', 'UPDATE_WATCHERS_COUNT', 'Update watchers count'),
+    )
+    
+    INPUT_EVENT_TYPES = {
+        EVENT_TYPES.CREATE_MESSAGE,
+        EVENT_TYPES.DELETE_MESSAGE,
+        EVENT_TYPES.UPDATE_WATCH_TIME,
+    }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -133,7 +116,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             return
 
         event = {
-            'type': self.event_types.UPDATE_WATCHERS_COUNT,
+            'type': self.EVENT_TYPES.UPDATE_WATCHERS_COUNT,
             'content': {'watchers_count': watchers_count},
         }
 
@@ -169,7 +152,7 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         if not await self.is_valid(message):
             return
 
-        if message['type'] == self.event_types.CREATE_MESSAGE:
+        if message['type'] == self.EVENT_TYPES.CREATE_MESSAGE:
             await self.create_message(message['content'])
 
     async def is_valid(self, message: dict) -> bool:
@@ -178,12 +161,12 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         response = None
 
         if not isinstance(message, dict) or 'type' not in message or 'content' not in message:
-            response = {'type': self.event_types.ERROR, 'content': _('Invalid message structure.')}
+            response = {'type': self.EVENT_TYPES.ERROR, 'content': _('Invalid message structure.')}
 
-        elif message['type'] not in self.event_types:
-            response = {'type': self.event_types.ERROR, 'content':  _('Invalid message type.')}
+        elif message['type'] not in self.INPUT_EVENT_TYPES:
+            response = {'type': self.EVENT_TYPES.ERROR, 'content':  _('Invalid message type.')}
 
-        if response is None:
+        if not response:
             return True
 
         await self.send_json(response)
@@ -194,11 +177,11 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         message, errors = await self._create_message(content)
 
-        if errors is not None:
-            await self.send_json({'type': self.event_types.ERROR, 'content': errors})
+        if errors:
+            await self.send_json({'type': self.EVENT_TYPES.ERROR, 'content': errors})
             return
 
-        event = {'type': self.event_types.SEND_MESSAGE, 'content': message}
+        event = {'type': self.EVENT_TYPES.SEND_MESSAGE, 'content': message}
         await self.channel_layer.group_send(self.broadcast_id, event)
 
     @database_sync_to_async
