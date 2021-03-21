@@ -53,8 +53,9 @@ class ImageSerializer(serializers.ModelSerializer):
 
         if request.method in UPDATE_METHODS:
             self.fields['type'].read_only = True
-        elif request.method in SAFE_METHODS and (
-            not user_role or user_role.sid not in (models.Role.SIDS.administrator, models.Role.SIDS.streamer)
+        elif (
+            request.method in SAFE_METHODS
+            and (not user_role or user_role.sid not in {models.Role.SIDS.administrator, models.Role.SIDS.streamer})
         ):
             self.fields.pop('users')
 
@@ -93,6 +94,9 @@ class ImageSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def check_icon(image_type: str, role_id: int) -> bool:
+        if image_type != models.Image.TYPES.ICON:
+            return False
+
         return models.Image.objects.filter(type=image_type, role_id=role_id).exists()
 
 
