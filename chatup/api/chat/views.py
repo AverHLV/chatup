@@ -156,7 +156,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         if (
             self.request.user.is_authenticated
             and self.request.method in permissions.SAFE_METHODS
-            and self.request.user.role.sid in {models.Role.SIDS.administrator, models.Role.SIDS.streamer}
+            and self.request.user.role.sid in {models.Role.SIDS.ADMINISTRATOR, models.Role.SIDS.STREAMER}
         ):
             queryset = queryset.prefetch_related('custom_owners')
         return queryset

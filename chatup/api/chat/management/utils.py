@@ -26,7 +26,7 @@ def debug_required(handler) -> callable:
 def create_broadcasts(count: int) -> tuple:
     """ Create broadcasts with generated data, mark one as active if no active broadcasts """
 
-    streamers = models.User.objects.filter(role__sid=models.Role.SIDS.streamer)
+    streamers = models.User.objects.filter(role__sid=models.Role.SIDS.STREAMER)
     if not streamers:
         raise CommandError('No streamers in database')
 
@@ -55,7 +55,7 @@ def create_broadcasts(count: int) -> tuple:
 def create_messages(count: int) -> list:
     broadcasts = models.Broadcast.objects.all()
     users = models.User.objects.all()
-    moderators = models.User.objects.filter(role__sid=models.Role.SIDS.moderator)
+    moderators = models.User.objects.filter(role__sid=models.Role.SIDS.MODERATOR)
     if not broadcasts or not users or not moderators:
         raise CommandError('No needed data in database')
 
