@@ -9,20 +9,7 @@ from . import models, tasks
 
 UPDATE_METHODS = 'PUT', 'PATCH'
 USER_PUBLIC_FIELDS = 'id', 'username', 'watchtime', 'username_color', 'role'
-USER_FIELDS = USER_PUBLIC_FIELDS + ('email',)
-
-
-class RoleSerializer(TranslatedModelSerializer):
-    class Meta:
-        model = models.Role
-        fields = 'id', 'sid', 'name'
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = models.User
-        fields = USER_FIELDS
-        read_only_fields = 'id', 'watchtime', 'role'
+USER_FIELDS = USER_PUBLIC_FIELDS + ('email', 'role_icon')
 
 
 class CustomBinaryImageField(BinaryImageField):
@@ -36,6 +23,44 @@ class CustomBinaryImageField(BinaryImageField):
         image_size = models.Image.SIZES[image_type]
 
         return super(CustomBinaryImageField, self).to_internal_value(data, resize=image_size)
+
+
+class RoleSerializer(TranslatedModelSerializer):
+    class Meta:
+        model = models.Role
+        fields = 'id', 'sid', 'name'
+
+
+class UserSerializer(serializers.ModelSerializer):
+    role_icon = serializers.IntegerField(source='icon', read_only=True)
+
+    class Meta:
+        model = models.User
+        fields = USER_FIELDS
+        read_only_fields = 'id', 'watchtime', 'role', 'icon'
+
+
+class UserControlSerializer(UserSerializer):
+    """ User management by higher powers """
+
+    class Meta(UserSerializer.Meta):
+        model = models.User
+        fields = UserSerializer.Meta.fields + ('role_icon', 'custom_images')
+        read_only_fields = 'id', 'watchtime', 'icon', 'email'
+
+    def validate_role(self, value):
+        request = self.context['request']
+        if request.user.id == self.instance.id and value.id != self.instance.role_id:
+            raise ValidationError({'role': _('You cannot change role of yourself.')})
+
+        return value
+
+    @staticmethod
+    def validate_custom_images(value):
+        if {models.Image.TYPES.CUSTOM} != {icon.type for icon in value}:
+            raise ValidationError({'custom_images': _('Custom images must be of type custom.')})
+
+        return value
 
 
 class ImageCacheSerializer(serializers.ModelSerializer):

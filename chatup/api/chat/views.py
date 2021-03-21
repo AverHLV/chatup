@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import F
 from django.utils.translation import gettext_lazy as _
 
-from rest_framework import generics, viewsets, permissions, status
+from rest_framework import generics, viewsets, mixins, permissions, status
 from rest_framework.views import APIView, Response
 from rest_framework.decorators import action
 
@@ -150,7 +150,7 @@ class BroadcastViewSet(ModelViewSetBase):
 class ImageViewSet(viewsets.ModelViewSet):
     queryset = models.Image.objects.all()
     serializer_class = serializers.ImageSerializer
-    permission_classes = own_permissions.IsStreamer,
+    permission_classes = own_permissions.IsSafeOrStreamer,
 
     use_cache = True
 
@@ -184,3 +184,17 @@ class ImageViewSet(viewsets.ModelViewSet):
 
         super().perform_destroy(instance)
         tasks.cache_images.delay()
+
+
+class UserControlViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    viewsets.GenericViewSet
+):
+    """ User management viewset """
+
+    queryset = models.User.objects.all()
+    serializer_class = serializers.UserControlSerializer
+    permission_classes = own_permissions.IsStreamer,
+    filterset_fields = 'username',
