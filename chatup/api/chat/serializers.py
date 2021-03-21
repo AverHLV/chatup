@@ -71,7 +71,7 @@ class ImageSerializer(serializers.ModelSerializer):
                 attrs.pop('role', None)
             else:
                 role = attrs.get('role')
-                if role and self.check_icon(role.id):
+                if role and self.check_icon(image_type, role.id):
                     raise ValidationError({'type': _('You can have only one icon per role.')})
 
         else:
@@ -87,14 +87,17 @@ class ImageSerializer(serializers.ModelSerializer):
                 if not role:
                     raise ValidationError({'role': _('This field is required.')})
 
-                if self.check_icon(role.id):
+                if self.check_icon(image_type, role.id):
                     raise ValidationError({'type': _('You can have only one icon per role.')})
 
         return attrs
 
     @staticmethod
-    def check_icon(role_id: int) -> bool:
-        return models.Image.objects.filter(type=models.Image.TYPES.ICON, role_id=role_id).exists()
+    def check_icon(image_type: str, role_id: int) -> bool:
+        if image_type != models.Image.TYPES.ICON:
+            return False
+
+        return models.Image.objects.filter(type=image_type, role_id=role_id).exists()
 
 
 class UserPublicSerializer(UserSerializer):
