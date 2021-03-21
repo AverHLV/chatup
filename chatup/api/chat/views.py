@@ -152,9 +152,11 @@ class ImageViewSet(viewsets.ModelViewSet):
     permission_classes = own_permissions.IsStreamer,
 
     def get_queryset(self):
-        queryset = super(ImageViewSet, self).get_queryset()
-        if self.request.user.is_authenticated and self.request.method in permissions.SAFE_METHODS and (
-                self.request.user.role.sid in (models.Role.SIDS.administrator, models.Role.SIDS.streamer)
+        queryset = super().get_queryset()
+        if (
+            self.request.user.is_authenticated
+            and self.request.method in permissions.SAFE_METHODS
+            and self.request.user.role.sid in {models.Role.SIDS.administrator, models.Role.SIDS.streamer}
         ):
             queryset = queryset.prefetch_related('custom_owners')
         return queryset
