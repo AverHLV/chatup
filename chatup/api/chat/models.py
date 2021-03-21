@@ -56,11 +56,11 @@ class Role(NameTranslation):
     """
 
     SIDS = Choices(
-        ('user', 'User'),
-        ('vip', 'VIP'),
-        ('moderator', 'Moderator'),
-        ('administrator', 'Administrator'),
-        ('streamer', 'Streamer'),
+        ('user', 'USER', 'User'),
+        ('vip', 'VIP', 'VIP'),
+        ('moderator', 'MODERATOR', 'Moderator'),
+        ('administrator', 'ADMINISTRATOR', 'Administrator'),
+        ('streamer', 'STREAMER', 'Streamer'),
     )
 
     sid = models.CharField(max_length=20, unique=True, choices=SIDS)

@@ -55,7 +55,7 @@ class ImageSerializer(serializers.ModelSerializer):
             self.fields['type'].read_only = True
         elif (
             request.method in SAFE_METHODS
-            and (not user_role or user_role.sid not in {models.Role.SIDS.administrator, models.Role.SIDS.streamer})
+            and (not user_role or user_role.sid not in {models.Role.SIDS.ADMINISTRATOR, models.Role.SIDS.STREAMER})
         ):
             self.fields.pop('users')
 
