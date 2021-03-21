@@ -8,6 +8,7 @@
     <textarea id="chat-log" cols="100" rows="20"></textarea><br>
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="chat-create" type="button" value="Create message">
+    <input id="update-watch-time" type="button" value="Update watch time">
     {{ id|json_script:"room-name" }}
 
     <script>
@@ -30,7 +31,7 @@
         };
 
         chatSocket.onclose = function(e) {
-            console.error('Chat socket closed unexpectedly');
+            document.querySelector('#chat-log').value += 'Chat socket closed unexpectedly\n';
         };
 
         window.onbeforeunload = function() {
@@ -49,6 +50,14 @@
             }));
 
             messageInputDom.value = '';
+            document.querySelector('#chat-log').value += '<Message sent>\n';
+        };
+
+        document.querySelector('#update-watch-time').onclick = function(e) {
+            chatSocket.send(JSON.stringify({
+                'type': 'update_watch_time', 'content': {}
+            }));
+            document.querySelector('#chat-log').value += '<Watch time update sent>\n';
         };
     </script>
 </body>

@@ -94,6 +94,7 @@ class User(AbstractUser):
     """
 
     DEFAULT_ROLE_ID = 1
+    WATCH_TIME_DELTA = 300  # seconds
 
     email = models.EmailField(unique=True, blank=True, null=True)
 
@@ -129,6 +130,12 @@ class User(AbstractUser):
 
     def __str__(self):
         return f'{self.pk}: {self.username}'
+
+    def increase_watch_time(self) -> None:
+        """ Update user with increased watch time """
+
+        self.watchtime += self.WATCH_TIME_DELTA
+        self.save(update_fields=['watchtime'])
 
 
 class Broadcast(TimeStamped):
@@ -190,11 +197,11 @@ class Broadcast(TimeStamped):
 
     def change_watcher(self, watcher_id: int, add: bool = True) -> tuple:
         """
-        Add new watcher to current broadcast watchers
+        Add or remove watcher in an active broadcast
 
         :param watcher_id: user id
         :param add: whether to add or delete given watcher
-        :return: current watchers count, whether to send an event (bool, None)
+        :return: distinct watchers count, whether to send an event (bool, None)
         """
 
         if not self.is_active:
@@ -228,7 +235,9 @@ class Broadcast(TimeStamped):
             lock.release()
 
     def clear_watchers(self) -> None:
-        cache.delete_pattern(self.watchers_key)
+        """ Remove watchers data for this broadcast """
+
+        cache.delete(self.watchers_key)
 
 
 class Message(TimeStamped):
