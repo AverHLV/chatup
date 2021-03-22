@@ -6,7 +6,6 @@ from rest_framework.permissions import SAFE_METHODS
 
 from api.abstract.serializers import TranslatedModelSerializer, BinaryImageField
 from . import models
-from .consumers import ChatConsumer
 
 UPDATE_METHODS = 'PUT', 'PATCH'
 USER_PUBLIC_FIELDS = 'id', 'username', 'watchtime', 'username_color', 'role'
@@ -133,6 +132,8 @@ class BroadcastSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data: dict):
         """ Update broadcast, send ws events if needed """
+
+        from .consumers import ChatConsumer
 
         closed = instance.is_active and not validated_data.get('is_active', True)
         updated = validated_data and tuple(validated_data.keys()) != ('is_active',)
