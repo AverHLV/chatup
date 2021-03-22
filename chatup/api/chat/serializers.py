@@ -6,6 +6,7 @@ from rest_framework.permissions import SAFE_METHODS
 
 from api.abstract.serializers import TranslatedModelSerializer, BinaryImageField
 from . import models
+from .consumers import ChatConsumer
 
 UPDATE_METHODS = 'PUT', 'PATCH'
 USER_PUBLIC_FIELDS = 'id', 'username', 'watchtime', 'username_color', 'role'
@@ -117,9 +118,8 @@ class BroadcastSerializer(serializers.ModelSerializer):
         """ Allow only one active broadcast per streamer """
 
         if value:
-            active = models.Broadcast.objects \
-                .filter(streamer=self.context['request'].user, is_active=True) \
-                .exists()
+            user = self.context['request'].user
+            active = models.Broadcast.objects.filter(streamer_id=user.id, is_active=True).exists()
             if active:
                 raise ValidationError({'is_active': _('You can have only one active broadcast.')})
 
@@ -130,6 +130,21 @@ class BroadcastSerializer(serializers.ModelSerializer):
         if request.method == 'POST':
             attrs['streamer'] = request.user
         return attrs
+
+    def update(self, instance, validated_data: dict):
+        """ Update broadcast, send ws events if needed """
+
+        closed = instance.is_active and not validated_data.get('is_active', True)
+        updated = validated_data and tuple(validated_data.keys()) != ('is_active',)
+        instance = super().update(instance, validated_data)
+
+        if closed:
+            ChatConsumer.send_close_broadcast_update(instance.id)
+            instance.clear_watchers()
+        elif updated:
+            ChatConsumer.send_broadcast_update(instance.id, validated_data)
+
+        return instance
 
 
 class MessageSerializer(serializers.ModelSerializer):

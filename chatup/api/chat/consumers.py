@@ -1,12 +1,16 @@
 from django.utils.translation import gettext as _
+from asgiref.sync import async_to_sync
 
 from channels import exceptions
+from channels.layers import get_channel_layer
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 from model_utils import Choices
 
 from . import models, serializers
+
+channel_layer = get_channel_layer()
 
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):
@@ -15,19 +19,24 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     and sends them to other room members
     """
 
+    CLOSE_BROADCAST_CODE = 4001
+
     EVENT_TYPES = Choices(
         ('create_message', 'CREATE_MESSAGE', 'Create message'),
         ('delete_message', 'DELETE_MESSAGE', 'Delete message'),
-        ('update_watch_time', 'UPDATE_WATCH_TIME', 'Update watch time'),
         ('error', 'ERROR', 'Error'),
         ('send_message', 'SEND_MESSAGE', 'Send message'),
         ('close_broadcast', 'CLOSE_BROADCAST', 'Close broadcast'),
+        ('update_broadcast', 'UPDATE_BROADCAST', 'Update broadcast'),
+        ('update_watch_time', 'UPDATE_WATCH_TIME', 'Update watch time'),
         ('update_watchers_count', 'UPDATE_WATCHERS_COUNT', 'Update watchers count'),
     )
-    
+
     INPUT_EVENT_TYPES = {
         EVENT_TYPES.CREATE_MESSAGE,
         EVENT_TYPES.DELETE_MESSAGE,
+        EVENT_TYPES.CLOSE_BROADCAST,
+        EVENT_TYPES.UPDATE_BROADCAST,
         EVENT_TYPES.UPDATE_WATCH_TIME,
     }
 
@@ -64,39 +73,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
     def leave_broadcast(self):
         """
         Leave broadcast on disconnecting by removing current user from watchers,
-        returns refreshed broadcast and watchers count
+        returns broadcast and watchers count
 
         :return: broadcast, watchers count, whether to sent event (bool, None)
         """
 
         broadcast = self.scope['broadcast']
-        broadcast.refresh_from_db(fields=['is_active'])
         return (broadcast, *broadcast.change_watcher(self.scope['user'].id, add=False))
-
-    async def send_watchers_count_update(
-            self,
-            watchers_count: (int, None),
-            send_to_group: bool
-    ) -> None:
-        """
-        Send event in case of broadcast watchers count update
-
-        :param watchers_count: count of broadcast watchers, return immediately if None
-        :param send_to_group: whether to send watchers count update event to a group
-        """
-
-        if watchers_count is None:
-            return
-
-        event = {
-            'type': self.EVENT_TYPES.UPDATE_WATCHERS_COUNT,
-            'content': {'watchers_count': watchers_count},
-        }
-
-        if send_to_group:
-            await self.channel_layer.group_send(self.broadcast_id, event)
-        else:
-            await self.update_watchers_count(event)
 
     async def connect(self) -> None:
         """ Enter room on connect """
@@ -127,6 +110,8 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         if message['type'] == self.EVENT_TYPES.CREATE_MESSAGE:
             await self.create_message(message['content'])
+        elif message['type'] == self.EVENT_TYPES.UPDATE_WATCH_TIME:
+            await self.update_watch_time()
 
     async def is_valid(self, message: dict) -> bool:
         """ Validate basic structure of received WS message """
@@ -144,6 +129,31 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         await self.send_json(response)
         return False
+
+    async def send_watchers_count_update(
+            self,
+            watchers_count: (int, None),
+            send_to_group: bool
+    ) -> None:
+        """
+        Send event in case of broadcast watchers count update
+
+        :param watchers_count: count of broadcast watchers, return immediately if None
+        :param send_to_group: whether to send watchers count update event to a group
+        """
+
+        if watchers_count is None:
+            return
+
+        event = {
+            'type': self.EVENT_TYPES.UPDATE_WATCHERS_COUNT,
+            'content': {'watchers_count': watchers_count},
+        }
+
+        if send_to_group:
+            await self.channel_layer.group_send(self.broadcast_id, event)
+        else:
+            await self.update_watchers_count(event)
 
     async def create_message(self, content: dict) -> None:
         """ 'create_message' type handler """
@@ -171,6 +181,10 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         serializer.save()
         return serializer.data, None
 
+    @database_sync_to_async
+    def update_watch_time(self) -> None:
+        self.scope['user'].increase_watch_time()
+
     async def send_message(self, event: dict) -> None:
         """ Group event handler: send a message to the user """
 
@@ -180,3 +194,38 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         """ Group event handler: send new 'watchers_count' value """
 
         await self.send_json(event)
+
+    async def update_broadcast(self, event: dict) -> None:
+        """ Group event handler: send new broadcast data """
+
+        await self.send_json(event)
+
+    async def close_broadcast(self, _event: dict) -> None:
+        """
+        Discard group and close connection with special code from the server end
+        if broadcast is no more active
+
+        :raises: StopConsumer
+        """
+
+        await self.channel_layer.group_discard(self.broadcast_id, self.channel_name)
+        await self.close(self.CLOSE_BROADCAST_CODE)
+        raise exceptions.StopConsumer()
+
+    # sync methods for outer usage
+
+    @classmethod
+    def send_broadcast_update(cls, broadcast_id: int, data: dict) -> None:
+        event = {
+            'type': cls.EVENT_TYPES.UPDATE_BROADCAST,
+            'content': data,
+        }
+        async_to_sync(channel_layer.group_send)(str(broadcast_id), event)
+
+    @classmethod
+    def send_close_broadcast_update(cls, broadcast_id: int) -> None:
+        event = {
+            'type': cls.EVENT_TYPES.CLOSE_BROADCAST,
+            'content': {},
+        }
+        async_to_sync(channel_layer.group_send)(str(broadcast_id), event)
