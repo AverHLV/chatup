@@ -69,15 +69,11 @@ class UserView(APIView):
 
 
 class RoleView(generics.ListAPIView):
-    """ User roles list view """
-
     queryset = models.Role.objects.order_by('sid')
     serializer_class = serializers.RoleSerializer
 
 
 class BroadcastViewSet(ModelViewSetBase):
-    """ User broadcasts viewset """
-
     queryset = models.Broadcast.objects.select_related('streamer').order_by('-is_active', '-created')
     serializer_class = serializers.BroadcastSerializer
     permission_classes = permissions.IsAuthenticatedOrReadOnly, own_permissions.IsBroadcastStreamer
@@ -192,9 +188,7 @@ class UserControlViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
 ):
-    """ User management viewset """
-
-    queryset = models.User.objects.all()
+    queryset = models.User.objects.order_by('id')
     serializer_class = serializers.UserControlSerializer
     permission_classes = own_permissions.IsStreamer,
     filterset_fields = 'username',

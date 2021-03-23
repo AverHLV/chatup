@@ -31,22 +31,39 @@ class RoleSerializer(TranslatedModelSerializer):
         fields = 'id', 'sid', 'name'
 
 
+class UserPublicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.User
+        fields = USER_PUBLIC_FIELDS
+
+
 class UserSerializer(serializers.ModelSerializer):
     role_icon = serializers.IntegerField(source='icon', read_only=True)
 
     class Meta:
         model = models.User
         fields = USER_FIELDS
-        read_only_fields = 'id', 'watchtime', 'role', 'icon'
+        read_only_fields = 'id', 'watchtime', 'role'
 
 
 class UserControlSerializer(UserSerializer):
     """ User management by higher powers """
 
     class Meta(UserSerializer.Meta):
-        model = models.User
-        fields = UserSerializer.Meta.fields + ('role_icon', 'custom_images')
-        read_only_fields = 'id', 'watchtime', 'icon', 'email'
+        fields = USER_PUBLIC_FIELDS + ('role_icon', 'custom_images')
+        read_only_fields = 'id', 'username', 'username_color', 'watchtime'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.role_icon_old_field = None
+
+        request = self.context['request']
+        if request.method not in SAFE_METHODS and 'role_icon' in request.data:
+            self.role_icon_old_field = self.fields['role_icon']
+            self.fields['role_icon'] = serializers.PrimaryKeyRelatedField(
+                allow_null=True,
+                queryset=models.Image.objects.only('id'),
+            )
 
     def validate_role(self, value):
         request = self.context['request']
@@ -61,6 +78,12 @@ class UserControlSerializer(UserSerializer):
             raise ValidationError({'custom_images': _('Custom images must be of type custom.')})
 
         return value
+
+    def to_representation(self, instance):
+        if self.role_icon_old_field:
+            self.fields['role_icon'] = self.role_icon_old_field
+
+        return super().to_representation(instance)
 
 
 class ImageCacheSerializer(serializers.ModelSerializer):
@@ -135,12 +158,6 @@ class ImageSerializer(ImageCacheSerializer):
         return instance
 
 
-class UserPublicSerializer(UserSerializer):
-    class Meta:
-        model = models.User
-        fields = USER_PUBLIC_FIELDS
-
-
 class BroadcastSerializer(serializers.ModelSerializer):
     streamer = UserPublicSerializer(read_only=True)
 
@@ -195,9 +212,6 @@ class MessageSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if self.context is None:
-            return
-
         # ws case
 
         if isinstance(self.context['request'], dict):
@@ -217,7 +231,7 @@ class MessageSerializer(serializers.ModelSerializer):
     def validate(self, attrs: dict) -> dict:
         # restore fields in ws case
 
-        if self.context and isinstance(self.context['request'], dict):
+        if isinstance(self.context['request'], dict):
             self.fields['author'] = UserPublicSerializer()
             self.fields['deleter'] = UserPublicSerializer()
 
