@@ -136,6 +136,10 @@ class User(AbstractUser):
     def __str__(self):
         return f'{self.pk}: {self.username}'
 
+    @property
+    def icon(self) -> (int, None):
+        return self.role_icon_id or self.role.images.filter(type=Image.TYPES.ICON).values_list('id', flat=True).first()
+
 
 class Broadcast(TimeStamped):
     """

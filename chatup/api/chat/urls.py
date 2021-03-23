@@ -9,6 +9,7 @@ from . import views
 router = DefaultRouter()
 router.register(r'broadcasts', views.BroadcastViewSet)
 router.register(r'images', views.ImageViewSet)
+router.register(r'users', views.UserControlViewSet)
 
 urlpatterns = [
     path('roles/', views.RoleView.as_view()),
