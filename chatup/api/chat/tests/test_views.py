@@ -62,7 +62,7 @@ class RoleTestCase(APITestCase):
         self.factory = APIRequestFactory()
 
         self.roles = models.Role.objects.all()
-        self.admin_role = models.Role.objects.get(sid=models.Role.SIDS.ADMINISTRATOR)
+        self.admin_role = models.Role.objects.get(sid=models.Role.SIDS.ADMIN)
         self.user = models.User.objects.get_by_natural_key('admin')
 
     def test_roles_list(self):

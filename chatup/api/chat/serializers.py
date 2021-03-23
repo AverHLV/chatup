@@ -108,7 +108,7 @@ class ImageSerializer(ImageCacheSerializer):
             self.fields['type'].read_only = True
         elif (
             request.method in SAFE_METHODS
-            and (not user_role or user_role.sid not in {models.Role.SIDS.ADMINISTRATOR, models.Role.SIDS.STREAMER})
+            and (not user_role or user_role.sid not in {models.Role.SIDS.ADMIN, models.Role.SIDS.STREAMER})
         ):
             self.fields.pop('users')
 
@@ -201,9 +201,9 @@ class BroadcastSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
+    is_deleted = serializers.BooleanField(read_only=True)
     author = UserPublicSerializer()
     deleter = UserPublicSerializer()
-    is_deleted = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Message
@@ -223,10 +223,6 @@ class MessageSerializer(serializers.ModelSerializer):
                 required=False,
                 queryset=models.User.objects.only('id')
             )
-
-    @staticmethod
-    def get_is_deleted(obj) -> bool:
-        return obj.is_deleted
 
     def validate(self, attrs: dict) -> dict:
         # restore fields in ws case

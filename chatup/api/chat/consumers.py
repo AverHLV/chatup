@@ -13,7 +13,27 @@ from . import models, serializers
 channel_layer = get_channel_layer()
 
 
-class ChatConsumer(AsyncJsonWebsocketConsumer):
+class ChatSyncSenderMixin:
+    """ Mixin for sending chat events from sync environment """
+
+    @classmethod
+    def send_broadcast_update(cls, broadcast_id: int, data: dict) -> None:
+        event = {
+            'type': cls.EVENT_TYPES.UPDATE_BROADCAST,
+            'content': data,
+        }
+        async_to_sync(channel_layer.group_send)(str(broadcast_id), event)
+
+    @classmethod
+    def send_close_broadcast_update(cls, broadcast_id: int) -> None:
+        event = {
+            'type': cls.EVENT_TYPES.CLOSE_BROADCAST,
+            'content': {},
+        }
+        async_to_sync(channel_layer.group_send)(str(broadcast_id), event)
+
+
+class ChatConsumer(ChatSyncSenderMixin, AsyncJsonWebsocketConsumer):
     """
     Async chat consumer that creates message instances in the database
     and sends them to other room members
@@ -203,21 +223,3 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_discard(self.broadcast_id, self.channel_name)
         await self.close(self.CLOSE_BROADCAST_CODE)
         raise exceptions.StopConsumer()
-
-    # sync methods for outer usage
-
-    @classmethod
-    def send_broadcast_update(cls, broadcast_id: int, data: dict) -> None:
-        event = {
-            'type': cls.EVENT_TYPES.UPDATE_BROADCAST,
-            'content': data,
-        }
-        async_to_sync(channel_layer.group_send)(str(broadcast_id), event)
-
-    @classmethod
-    def send_close_broadcast_update(cls, broadcast_id: int) -> None:
-        event = {
-            'type': cls.EVENT_TYPES.CLOSE_BROADCAST,
-            'content': {},
-        }
-        async_to_sync(channel_layer.group_send)(str(broadcast_id), event)

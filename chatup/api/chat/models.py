@@ -64,8 +64,8 @@ class Role(NameTranslation):
     SIDS = Choices(
         ('user', 'USER', 'User'),
         ('vip', 'VIP', 'VIP'),
-        ('moderator', 'MODERATOR', 'Moderator'),
-        ('administrator', 'ADMINISTRATOR', 'Administrator'),
+        ('moderator', 'MODER', 'Moderator'),
+        ('administrator', 'ADMIN', 'Administrator'),
         ('streamer', 'STREAMER', 'Streamer'),
     )
 

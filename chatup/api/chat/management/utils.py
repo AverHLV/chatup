@@ -55,7 +55,7 @@ def create_broadcasts(count: int) -> tuple:
 def create_messages(count: int) -> list:
     broadcasts = models.Broadcast.objects.all()
     users = models.User.objects.all()
-    moderators = models.User.objects.filter(role__sid=models.Role.SIDS.MODERATOR)
+    moderators = models.User.objects.filter(role__sid=models.Role.SIDS.MODER)
     if not broadcasts or not users or not moderators:
         raise CommandError('No needed data in database')
 

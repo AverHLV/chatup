@@ -76,7 +76,7 @@ class RoleView(generics.ListAPIView):
 class BroadcastViewSet(ModelViewSetBase):
     queryset = models.Broadcast.objects.select_related('streamer').order_by('-is_active', '-created')
     serializer_class = serializers.BroadcastSerializer
-    permission_classes = permissions.IsAuthenticatedOrReadOnly, own_permissions.IsBroadcastStreamer
+    permission_classes = own_permissions.IsStreamerOrReadOnly,
     filterset_fields = 'title', 'is_active', 'streamer_id'
 
     serializer_action_classes = {
@@ -146,7 +146,7 @@ class BroadcastViewSet(ModelViewSetBase):
 class ImageViewSet(viewsets.ModelViewSet):
     queryset = models.Image.objects.all()
     serializer_class = serializers.ImageSerializer
-    permission_classes = own_permissions.IsSafeOrStreamer,
+    permission_classes = permissions.IsAuthenticatedOrReadOnly, own_permissions.IsAdminStreamerOrReadOnly
 
     use_cache = True
 
@@ -155,7 +155,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         if (
             self.request.user.is_authenticated
             and self.request.method in permissions.SAFE_METHODS
-            and self.request.user.role.sid in {models.Role.SIDS.ADMINISTRATOR, models.Role.SIDS.STREAMER}
+            and self.request.user.role.sid in {models.Role.SIDS.ADMIN, models.Role.SIDS.STREAMER}
         ):
             self.use_cache = False
             queryset = queryset.prefetch_related('custom_owners')
@@ -175,8 +175,8 @@ class ImageViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def perform_destroy(self, instance):
-        # send cache task on delete, create and update cases
-        # will be handled by a serializer
+        # send cache task on delete,
+        # create and update cases will be handled by serializer
 
         super().perform_destroy(instance)
         tasks.cache_images.delay()
@@ -190,5 +190,5 @@ class UserControlViewSet(
 ):
     queryset = models.User.objects.order_by('id')
     serializer_class = serializers.UserControlSerializer
-    permission_classes = own_permissions.IsStreamer,
+    permission_classes = permissions.IsAuthenticated, own_permissions.IsStreamer
     filterset_fields = 'username',
