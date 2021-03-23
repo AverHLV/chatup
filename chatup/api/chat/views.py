@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.cache import cache
 from django.contrib.auth import get_user_model
 from django.db.models import F
 from django.utils.translation import gettext_lazy as _
@@ -13,7 +14,7 @@ from drf_yasg.utils import swagger_auto_schema
 from itertools import groupby
 
 from ..abstract.views import ModelViewSetBase
-from . import models, serializers, permissions as own_permissions
+from . import models, serializers, tasks, permissions as own_permissions
 
 User = get_user_model()
 
@@ -151,6 +152,8 @@ class ImageViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.ImageSerializer
     permission_classes = own_permissions.IsStreamer,
 
+    use_cache = True
+
     def get_queryset(self):
         queryset = super().get_queryset()
         if (
@@ -158,12 +161,26 @@ class ImageViewSet(viewsets.ModelViewSet):
             and self.request.method in permissions.SAFE_METHODS
             and self.request.user.role.sid in {models.Role.SIDS.ADMINISTRATOR, models.Role.SIDS.STREAMER}
         ):
+            self.use_cache = False
             queryset = queryset.prefetch_related('custom_owners')
         return queryset
 
     def list(self, request, *args, **kwargs):
-        # don`t paginate queryset
+        # don`t paginate queryset, use cached response if needed
 
         queryset = self.filter_queryset(self.get_queryset())
+
+        if self.use_cache:
+            data = cache.get(models.Image.list_key(), None)
+            if data is not None:
+                return Response(data)
+
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    def perform_destroy(self, instance):
+        # send cache task on delete, create and update cases
+        # will be handled by a serializer
+
+        super().perform_destroy(instance)
+        tasks.cache_images.delay()

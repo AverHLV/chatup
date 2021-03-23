@@ -5,7 +5,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import SAFE_METHODS
 
 from api.abstract.serializers import TranslatedModelSerializer, BinaryImageField
-from . import models
+from . import models, tasks
 
 UPDATE_METHODS = 'PUT', 'PATCH'
 USER_PUBLIC_FIELDS = 'id', 'username', 'watchtime', 'username_color', 'role'
@@ -38,12 +38,17 @@ class CustomBinaryImageField(BinaryImageField):
         return super(CustomBinaryImageField, self).to_internal_value(data, resize=image_size)
 
 
-class ImageSerializer(serializers.ModelSerializer):
+class ImageCacheSerializer(serializers.ModelSerializer):
     image = CustomBinaryImageField()
 
     class Meta:
         model = models.Image
-        fields = 'id', 'image', 'type', 'description', 'role', 'users'
+        fields = 'id', 'image', 'type', 'description', 'role'
+
+
+class ImageSerializer(ImageCacheSerializer):
+    class Meta(ImageCacheSerializer.Meta):
+        fields = ImageCacheSerializer.Meta.fields + ('users',)
         extra_kwargs = {'users': {'source': 'custom_owners', 'required': False}}
 
     def __init__(self, *args, **kwargs):
@@ -98,6 +103,11 @@ class ImageSerializer(serializers.ModelSerializer):
             return False
 
         return models.Image.objects.filter(type=image_type, role_id=role_id).exists()
+
+    def save(self, **kwargs):
+        instance = super().save(**kwargs)
+        tasks.cache_images.delay()
+        return instance
 
 
 class UserPublicSerializer(UserSerializer):

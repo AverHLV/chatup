@@ -28,7 +28,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         ('send_message', 'SEND_MESSAGE', 'Send message'),
         ('close_broadcast', 'CLOSE_BROADCAST', 'Close broadcast'),
         ('update_broadcast', 'UPDATE_BROADCAST', 'Update broadcast'),
-        ('update_watch_time', 'UPDATE_WATCH_TIME', 'Update watch time'),
         ('update_watchers_count', 'UPDATE_WATCHERS_COUNT', 'Update watchers count'),
     )
 
@@ -37,7 +36,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         EVENT_TYPES.DELETE_MESSAGE,
         EVENT_TYPES.CLOSE_BROADCAST,
         EVENT_TYPES.UPDATE_BROADCAST,
-        EVENT_TYPES.UPDATE_WATCH_TIME,
     }
 
     def __init__(self, *args, **kwargs):
@@ -110,8 +108,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
         if message['type'] == self.EVENT_TYPES.CREATE_MESSAGE:
             await self.create_message(message['content'])
-        elif message['type'] == self.EVENT_TYPES.UPDATE_WATCH_TIME:
-            await self.update_watch_time()
 
     async def is_valid(self, message: dict) -> bool:
         """ Validate basic structure of received WS message """
@@ -180,10 +176,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
             return None, serializer.errors
         serializer.save()
         return serializer.data, None
-
-    @database_sync_to_async
-    def update_watch_time(self) -> None:
-        self.scope['user'].increase_watch_time()
 
     async def send_message(self, event: dict) -> None:
         """ Group event handler: send a message to the user """

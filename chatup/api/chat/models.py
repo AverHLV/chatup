@@ -36,6 +36,12 @@ class Image(models.Model):
     def __str__(self):
         return f'{self.pk}: {self.type}'
 
+    @classmethod
+    def list_key(cls) -> str:
+        """ Redis key for Image list response """
+
+        return 'IMAGE_LIST'
+
 
 class RoleQuerySet(models.QuerySet):
     def prefetch_icon(self, to_attr: str = 'icon'):
@@ -94,7 +100,6 @@ class User(AbstractUser):
     """
 
     DEFAULT_ROLE_ID = 1
-    WATCH_TIME_DELTA = 300  # seconds
 
     email = models.EmailField(unique=True, blank=True, null=True)
 
@@ -130,12 +135,6 @@ class User(AbstractUser):
 
     def __str__(self):
         return f'{self.pk}: {self.username}'
-
-    def increase_watch_time(self) -> None:
-        """ Update user with increased watch time """
-
-        self.watchtime += self.WATCH_TIME_DELTA
-        self.save(update_fields=['watchtime'])
 
 
 class Broadcast(TimeStamped):
