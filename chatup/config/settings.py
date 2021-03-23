@@ -1,3 +1,5 @@
+import sys
+
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.translation import gettext_lazy as _
 
@@ -17,6 +19,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = environ.get('CH_SECRET_KEY', DEBUG_SECRET_KEY)
 
+TEST = 'test' in sys.argv
 DEBUG = environ.get('CH_DEBUG', 'true') == 'true'
 
 if not DEBUG and SECRET_KEY == DEBUG_SECRET_KEY:
@@ -261,3 +264,6 @@ STATICFILES_DIRS = BASE_DIR / 'ui',
 
 USERS_WATCH_TIME_DELTA = 60 * 5  # seconds
 CELERY_BROKER_URL = environ.get('REDIS_URL', DEFAULT_REDIS_URL)
+
+if TEST:
+    CELERY_TASK_ALWAYS_EAGER = True
