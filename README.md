@@ -27,9 +27,11 @@ Compile translations:
 python manage.py compilemessages
 ```
 
-Run development server:
+Run development server, celery beat and worker:
 ```
 python manage.py runserver
+celery -A config beat -l INFO
+celery -A config worker -l INFO --concurrency 1
 ```
 
 Set needed environment variables (see definition below), 
@@ -59,7 +61,7 @@ Run tests in parallel with preserving testing database:
 python manage.py test --keepdb --parallel
 ```
 
-Populate database with generated objects (broadcasts and messages):
+Populate a database with generated objects (broadcasts and messages):
 
 ```
 python manage.py create
@@ -75,4 +77,10 @@ Drop schema without confirmation (Heroku case):
 
 ```
 python manage.py reset-db -nc True
+```
+
+Create needed cache in Redis (celery worker should be started):
+
+```
+python manage.py create_cache
 ```

@@ -66,6 +66,9 @@ htmlcov/
 nosetests.xml
 coverage.xml
 
+# Celery
+celerybeat*
+
 # Translations
 *.mo
 *.pot

@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 DEFAULT_DB_URL = 'postgres://postgres:postgres@localhost:5432/chatup'
 DEFAULT_REDIS_URL = 'redis://localhost:6379'
 DEFAULT_HOST = 'http://127.0.0.1:8000'
+DEFAULT_WORKER_CONCURRENCY = 1
 DEBUG_SECRET_KEY = 'secret'
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -255,3 +256,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'static'
 STATICFILES_DIRS = BASE_DIR / 'ui',
+
+# Celery
+
+USERS_WATCH_TIME_DELTA = 60 * 5  # seconds
+CELERY_BROKER_URL = environ.get('REDIS_URL', DEFAULT_REDIS_URL)
