@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'drf_yasg',
     'channels',
+    'debug_toolbar',
 
     # own apps
 
@@ -70,6 +71,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+if DEBUG:
+    MIDDLEWARE.insert(2, 'debug_toolbar.middleware.DebugToolbarMiddleware')
 
 TEMPLATES = [
     {
@@ -188,6 +192,12 @@ CHANNEL_LAYERS = {
             'hosts': [environ.get('REDIS_URL', DEFAULT_REDIS_URL)],
         },
     },
+}
+
+# Debug toolbar
+
+DEBUG_TOOLBAR_CONFIG = {
+    'SHOW_TOOLBAR_CALLBACK': 'config.utils.show_toolbar',
 }
 
 # Logging configuration

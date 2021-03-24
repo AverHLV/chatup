@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.core.cache import cache
 from django.contrib.auth import get_user_model
-from django.db.models import F
+from django.db.models import F, Prefetch
 from django.utils.translation import gettext_lazy as _
 
 from rest_framework import generics, viewsets, mixins, permissions, status
@@ -74,7 +74,7 @@ class RoleView(generics.ListAPIView):
 
 
 class BroadcastViewSet(ModelViewSetBase):
-    queryset = models.Broadcast.objects.select_related('streamer').order_by('-is_active', '-created')
+    queryset = models.Broadcast.objects.order_by('-is_active', '-created')
     serializer_class = serializers.BroadcastSerializer
     permission_classes = own_permissions.IsStreamerOrReadOnly,
     filterset_fields = 'title', 'is_active', 'streamer_id'
@@ -87,6 +87,15 @@ class BroadcastViewSet(ModelViewSetBase):
     filterset_action_fields = {
         'messages': ('author_id',),
     }
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset \
+            .select_related('streamer') \
+            .only(
+                'created', 'updated', 'title', 'description', 'is_active', 'source_link', 'streamer__username',
+                'streamer__username_color', 'streamer__watchtime', 'streamer__role_id'
+            )
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -109,6 +118,11 @@ class BroadcastViewSet(ModelViewSetBase):
         queryset = models.Message.objects \
             .filter(broadcast_id=pk) \
             .select_related('author', 'deleter') \
+            .only(
+                'created', 'updated', 'author_id', 'deleter_id', 'broadcast_id', 'text', 'author__username',
+                'author__username_color', 'author__watchtime', 'author__role_id', 'deleter__username',
+                'deleter__username_color', 'deleter__watchtime', 'deleter__role_id',
+            ) \
             .order_by('-created')
         if filters:
             queryset = queryset.filter(**filters)
@@ -129,7 +143,10 @@ class BroadcastViewSet(ModelViewSetBase):
         if not watchers:
             users = []
         else:
-            users = User.objects.filter(id__in=watchers).annotate(role_sid=F('role__sid'))
+            users = User.objects \
+                .filter(id__in=watchers) \
+                .annotate(role_sid=F('role__sid')) \
+                .only('username', 'username_color', 'watchtime', 'role_id')
 
         result = {
             key: self.get_serializer(group, many=True).data
@@ -158,7 +175,7 @@ class ImageViewSet(viewsets.ModelViewSet):
             and self.request.user.role.sid in {models.Role.SIDS.ADMIN, models.Role.SIDS.STREAMER}
         ):
             self.use_cache = False
-            queryset = queryset.prefetch_related('custom_owners')
+            queryset = queryset.prefetch_related(Prefetch('custom_owners', queryset=User.objects.only('id')))
         return queryset
 
     def list(self, request, *args, **kwargs):
@@ -188,7 +205,20 @@ class UserControlViewSet(
     mixins.UpdateModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = models.User.objects.order_by('id')
+    queryset = User.objects.order_by('id')
     serializer_class = serializers.UserControlSerializer
     permission_classes = permissions.IsAuthenticated, own_permissions.IsStreamer
     filterset_fields = 'username',
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        custom_images = models.Image.objects.filter(type=models.Image.TYPES.CUSTOM).only('id')
+        icon = models.Image.objects.filter(type=models.Image.TYPES.ICON).only('role_id')
+
+        return queryset \
+            .select_related('role') \
+            .prefetch_related(
+                Prefetch('custom_images', queryset=custom_images),
+                Prefetch('role__images', queryset=icon, to_attr='icon'),
+            ) \
+            .only('username', 'username_color', 'watchtime', 'role_id', 'role_icon_id', 'role__sid')

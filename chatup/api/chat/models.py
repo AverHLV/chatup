@@ -43,16 +43,6 @@ class Image(models.Model):
         return 'IMAGE_LIST'
 
 
-class RoleQuerySet(models.QuerySet):
-    def prefetch_icon(self, to_attr: str = 'icon'):
-        prefetch = models.Prefetch('images', queryset=Image.objects.filter(type=Image.TYPES.ICON), to_attr=to_attr)
-        return self.prefetch_related(prefetch)
-
-    def prefetch_smiles(self, to_attr: str = 'smiles'):
-        prefetch = models.Prefetch('images', queryset=Image.objects.filter(type=Image.TYPES.SMILEY), to_attr=to_attr)
-        return self.prefetch_related(prefetch)
-
-
 class Role(NameTranslation):
     """
     User role model, defines user permissions
@@ -70,8 +60,6 @@ class Role(NameTranslation):
     )
 
     sid = models.CharField(max_length=20, unique=True, choices=SIDS)
-
-    objects = RoleQuerySet.as_manager()
 
     class Meta:
         db_table = 'roles'
@@ -138,7 +126,14 @@ class User(AbstractUser):
 
     @property
     def icon(self) -> (int, None):
-        return self.role_icon_id or self.role.images.filter(type=Image.TYPES.ICON).values_list('id', flat=True).first()
+        if self.role_icon_id:
+            return self.role_icon_id
+
+        if hasattr(self.role, 'icon'):
+            icon = next(iter(self.role.icon), None)
+            return icon.id if icon else None
+
+        return self.role.images.filter(type=Image.TYPES.ICON).values_list('id', flat=True).first()
 
 
 class Broadcast(TimeStamped):

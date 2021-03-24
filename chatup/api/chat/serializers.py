@@ -52,6 +52,10 @@ class UserControlSerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
         fields = USER_PUBLIC_FIELDS + ('role_icon', 'custom_images')
         read_only_fields = 'id', 'username', 'username_color', 'watchtime'
+        extra_kwargs = {
+            'role': {'queryset': models.Role.objects.only('sid')},
+            'custom_images': {'queryset': models.Image.objects.filter(type=models.Image.TYPES.CUSTOM).only('type')},
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -92,12 +96,16 @@ class ImageCacheSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Image
         fields = 'id', 'image', 'type', 'description', 'role'
+        extra_kwargs = {'role': {'queryset': models.Role.objects.only('sid')}}
 
 
 class ImageSerializer(ImageCacheSerializer):
     class Meta(ImageCacheSerializer.Meta):
         fields = ImageCacheSerializer.Meta.fields + ('users',)
-        extra_kwargs = {'users': {'source': 'custom_owners', 'required': False}}
+        extra_kwargs = {
+            'role': {'queryset': models.Role.objects.only('sid')},
+            'users': {'source': 'custom_owners', 'required': False, 'queryset': models.User.objects.only('username')}
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
