@@ -286,3 +286,11 @@ class Message(TimeStamped):
         """ Check whether this message is deleted """
 
         return self.deleter_id is not None
+
+    def mark_as_deleted(self, deleter_id: int) -> None:
+        self.deleter_id = deleter_id
+        self.save(update_fields=['deleter_id'])
+
+    def undo_mark_as_deleted(self) -> None:
+        self.deleter_id = None
+        self.save(update_fields=['deleter_id'])

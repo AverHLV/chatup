@@ -5,6 +5,7 @@ from django.views.generic import TemplateView
 from rest_framework.routers import DefaultRouter
 
 from . import views
+from .consumers import ChatConsumer
 
 router = DefaultRouter()
 router.register(r'broadcasts', views.BroadcastViewSet)
@@ -25,6 +26,6 @@ if settings.DEBUG:
         path('ws/rooms/', TemplateView.as_view(template_name='rooms.html'), name='rooms'),
         path('ws/rooms/<int:id>/', TemplateView.as_view(
             template_name='room.html',
-            extra_context={'use_https': settings.REST_API_USE_HTTPS}
+            extra_context={'use_https': settings.REST_API_USE_HTTPS, 'event_types': ChatConsumer.EVENT_TYPES}
         )),
     ]
