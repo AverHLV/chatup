@@ -8,6 +8,8 @@
     <textarea id="chat-log" cols="100" rows="20"></textarea><br>
     <input id="chat-message-input" type="text" size="100"><br>
     <input id="chat-create" type="button" value="Create message">
+    <input id="delete-message" type="button" value="Delete message">
+    <input id="undo-delete-message" type="button" value="Undo delete message">
     {{ id|json_script:"room-name" }}
 
     <script>
@@ -42,14 +44,32 @@
 
         document.querySelector('#chat-create').onclick = function(e) {
             const messageInputDom = document.querySelector('#chat-message-input');
-            const message = messageInputDom.value;
-
-            chatSocket.send(JSON.stringify({
-                'type': 'create_message', 'content': {'text': message}
-            }));
-
+            const event = JSON.stringify({
+                'type': '{{ event_types.CREATE_MESSAGE }}', 'content': {'text': messageInputDom.value}
+            });
+            chatSocket.send(event);
             messageInputDom.value = '';
-            document.querySelector('#chat-log').value += '<Message sent>\n';
+            document.querySelector('#chat-log').value += 'Event sent: ' + event + '\n';
+        };
+
+        document.querySelector('#delete-message').onclick = function(e) {
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const event = JSON.stringify({
+                'type': '{{ event_types.DELETE_MESSAGE }}', 'content': {'id': parseInt(messageInputDom.value, 10)}
+            });
+            chatSocket.send(event);
+            messageInputDom.value = '';
+            document.querySelector('#chat-log').value += 'Event sent: ' + event + '\n';
+        };
+
+        document.querySelector('#undo-delete-message').onclick = function(e) {
+            const messageInputDom = document.querySelector('#chat-message-input');
+            const event = JSON.stringify({
+                'type': '{{ event_types.UNDO_DELETE_MESSAGE }}', 'content': {'id': parseInt(messageInputDom.value, 10)}
+            });
+            chatSocket.send(event);
+            messageInputDom.value = '';
+            document.querySelector('#chat-log').value += 'Event sent: ' + event + '\n';
         };
     </script>
 </body>

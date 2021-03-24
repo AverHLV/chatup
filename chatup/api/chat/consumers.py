@@ -1,11 +1,12 @@
+from django.db.models import F
 from django.utils.translation import gettext as _
-from asgiref.sync import async_to_sync
 
 from channels import exceptions
 from channels.layers import get_channel_layer
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
+from asgiref.sync import async_to_sync
 from model_utils import Choices
 
 from . import models, serializers
@@ -42,10 +43,12 @@ class ChatConsumer(ChatSyncSenderMixin, AsyncJsonWebsocketConsumer):
     CLOSE_BROADCAST_CODE = 4001
 
     EVENT_TYPES = Choices(
-        ('create_message', 'CREATE_MESSAGE', 'Create message'),
-        ('delete_message', 'DELETE_MESSAGE', 'Delete message'),
-        ('error', 'ERROR', 'Error'),
         ('send_message', 'SEND_MESSAGE', 'Send message'),
+        ('create_message', 'CREATE_MESSAGE', 'Create message'),
+        ('update_message', 'UPDATE_MESSAGE', 'Update message'),
+        ('delete_message', 'DELETE_MESSAGE', 'Delete message'),
+        ('undo_delete_message', 'UNDO_DELETE_MESSAGE', 'Undo delete message'),
+        ('error', 'ERROR', 'Error'),
         ('close_broadcast', 'CLOSE_BROADCAST', 'Close broadcast'),
         ('update_broadcast', 'UPDATE_BROADCAST', 'Update broadcast'),
         ('update_watchers_count', 'UPDATE_WATCHERS_COUNT', 'Update watchers count'),
@@ -54,8 +57,7 @@ class ChatConsumer(ChatSyncSenderMixin, AsyncJsonWebsocketConsumer):
     INPUT_EVENT_TYPES = {
         EVENT_TYPES.CREATE_MESSAGE,
         EVENT_TYPES.DELETE_MESSAGE,
-        EVENT_TYPES.CLOSE_BROADCAST,
-        EVENT_TYPES.UPDATE_BROADCAST,
+        EVENT_TYPES.UNDO_DELETE_MESSAGE,
     }
 
     def __init__(self, *args, **kwargs):
@@ -120,25 +122,31 @@ class ChatConsumer(ChatSyncSenderMixin, AsyncJsonWebsocketConsumer):
 
         await self.channel_layer.group_discard(self.broadcast_id, self.channel_name)
 
-    async def receive_json(self, message, **kwargs) -> None:
-        """ Received messages entrypoint. Perform actions based on a message type """
+    async def receive_json(self, event, **kwargs) -> None:
+        """ Received client events entrypoint. Perform actions based on an event type """
 
-        if not await self.is_valid(message):
+        if not await self.is_valid(event):
             return
 
-        if message['type'] == self.EVENT_TYPES.CREATE_MESSAGE:
-            await self.create_message(message['content'])
+        event_type = event['type']
+        content = event['content']
 
-    async def is_valid(self, message: dict) -> bool:
-        """ Validate basic structure of received WS message """
+        if event_type == self.EVENT_TYPES.CREATE_MESSAGE:
+            await self.create_message(content)
+        elif event_type == self.EVENT_TYPES.DELETE_MESSAGE:
+            await self.handle_message_update(content, True)
+        elif event_type == self.EVENT_TYPES.UNDO_DELETE_MESSAGE:
+            await self.handle_message_update(content, False)
+
+    async def is_valid(self, event: dict) -> bool:
+        """ Validate basic structure of received event """
 
         response = None
 
-        if not isinstance(message, dict) or 'type' not in message or 'content' not in message:
-            response = {'type': self.EVENT_TYPES.ERROR, 'content': _('Invalid message structure.')}
-
-        elif message['type'] not in self.INPUT_EVENT_TYPES:
-            response = {'type': self.EVENT_TYPES.ERROR, 'content':  _('Invalid message type.')}
+        if not isinstance(event, dict) or 'type' not in event or 'content' not in event:
+            response = {'type': self.EVENT_TYPES.ERROR, 'content': _('Invalid event structure.')}
+        elif event['type'] not in self.INPUT_EVENT_TYPES:
+            response = {'type': self.EVENT_TYPES.ERROR, 'content':  _('Invalid event type.')}
 
         if not response:
             return True
@@ -165,7 +173,6 @@ class ChatConsumer(ChatSyncSenderMixin, AsyncJsonWebsocketConsumer):
             'type': self.EVENT_TYPES.UPDATE_WATCHERS_COUNT,
             'content': {'watchers_count': watchers_count},
         }
-
         if send_to_group:
             await self.channel_layer.group_send(self.broadcast_id, event)
         else:
@@ -197,8 +204,91 @@ class ChatConsumer(ChatSyncSenderMixin, AsyncJsonWebsocketConsumer):
         serializer.save()
         return serializer.data, None
 
+    async def handle_message_update(self, content: dict, is_delete: bool) -> None:
+        """ Handle DELETE_MESSAGE or UNDO_DELETE_MESSAGE input events """
+
+        response = None
+        allowed_roles = {models.Role.SIDS.MODER, models.Role.SIDS.ADMIN, models.Role.SIDS.STREAMER}
+        if self.scope['user'].role.sid not in allowed_roles:
+            response = {'type': self.EVENT_TYPES.ERROR, 'content': _('Permission denied')}
+        serializer = serializers.MessageUpdateWSSerializer(data=content)
+        if not serializer.is_valid():
+            response = {'type': self.EVENT_TYPES.ERROR, 'content': serializer.errors}
+
+        if response:
+            await self.send_json(response)
+            return
+
+        message = await self.get_message(content['id'], is_delete)
+        if not message:
+            await self.send_json({'type': self.EVENT_TYPES.ERROR, 'content': _('Object not found')})
+            return
+
+        if not self.check_message_permissions(message, is_delete):
+            await self.send_json({'type': self.EVENT_TYPES.ERROR, 'content': _('Permission denied')})
+            return
+
+        await self._update_message(message, is_delete)
+        serializer = serializers.MessageUpdateWSSerializer(message)
+        event = {
+            'type': self.EVENT_TYPES.UPDATE_MESSAGE,
+            'content': serializer.data,
+        }
+        await self.channel_layer.group_send(self.broadcast_id, event)
+
+    @database_sync_to_async
+    def get_message(self, message_id: int, is_delete: bool):
+        message = models.Message.objects.filter(id=message_id)
+        if is_delete:
+            message = message.filter(deleter_id__isnull=True).annotate(author_sid=F('author__role__sid'))
+        else:
+            message = message.filter(deleter_id__isnull=False).annotate(deleter_sid=F('deleter__role__sid'))
+        return message.first()
+
+    @database_sync_to_async
+    def _update_message(self, message, is_delete: bool) -> None:
+        if is_delete:
+            message.mark_as_deleted(self.scope['user'].id)
+        else:
+            message.undo_mark_as_deleted()
+
+    def check_message_permissions(self, message, is_delete: bool) -> bool:
+        """ Check user permissions during DELETE_MESSAGE or UNDO_DELETE_MESSAGE events """
+
+        user_sid = self.scope['user'].role.sid
+
+        if is_delete:
+            allowed_sids_for_moder = models.Role.SIDS.USER, models.Role.SIDS.VIP
+            allowed_sids_for_admin = allowed_sids_for_moder + (models.Role.SIDS.MODER,)
+            allowed_sids_for_streamer = allowed_sids_for_admin + ( models.Role.SIDS.ADMIN,)
+
+            if (
+                message.author_id == self.scope['user'].id
+                or (user_sid == models.Role.SIDS.MODER and message.author_sid in allowed_sids_for_moder)
+                or (user_sid == models.Role.SIDS.ADMIN and message.author_sid in allowed_sids_for_admin)
+                or (user_sid == models.Role.SIDS.STREAMER and message.author_sid in allowed_sids_for_streamer)
+            ):
+                return True
+
+        else:
+            allowed_sids_for_streamer = {models.Role.SIDS.MODER, models.Role.SIDS.ADMIN}
+
+            if (
+                message.deleter_id == self.scope['user'].id
+                or (user_sid == models.Role.SIDS.ADMIN and message.deleter_sid == models.Role.SIDS.MODER)
+                or (user_sid == models.Role.SIDS.STREAMER and message.deleter_sid in allowed_sids_for_streamer)
+            ):
+                return True
+
+        return False
+
     async def send_message(self, event: dict) -> None:
         """ Group event handler: send a message to the user """
+
+        await self.send_json(event)
+
+    async def update_message(self, event: dict) -> None:
+        """ Group event handler: send new message data """
 
         await self.send_json(event)
 

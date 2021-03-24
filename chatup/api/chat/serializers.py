@@ -240,3 +240,9 @@ class MessageSerializer(serializers.ModelSerializer):
             self.fields['deleter'] = UserPublicSerializer()
 
         return attrs
+
+
+class MessageUpdateWSSerializer(serializers.Serializer):
+    id = serializers.IntegerField(required=True)
+    deleter_id = serializers.IntegerField(read_only=True)
+    is_deleted = serializers.BooleanField(read_only=True)
