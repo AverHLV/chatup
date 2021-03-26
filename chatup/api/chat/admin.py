@@ -36,7 +36,7 @@ CustomUserAdmin.fieldsets += (_('Additional fields'), {
 class BroadCastAdmin(admin.ModelAdmin):
     list_display = 'title', 'id', 'streamer'
     readonly_fields = 'id', 'created', 'updated'
-    search_fields = 'title', 'source_link'
+    search_fields = 'title',
 
 
 @admin.register(models.Message)

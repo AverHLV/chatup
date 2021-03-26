@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-03-17 17:37+0000\n"
+"POT-Creation-Date: 2021-03-26 12:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -40,122 +40,142 @@ msgstr ""
 msgid "User not found by the given credentials."
 msgstr "По заданным учетным данным пользователь не найден."
 
-#: api/auth_api/views.py:27 api/auth_api/views.py:62
+#: api/auth_api/views.py:27 api/auth_api/views.py:56
 msgid "You are already logged in."
 msgstr "Вы уже вошли в систему."
 
-#: api/auth_api/views.py:37
+#: api/auth_api/views.py:32
 msgid "Successfully logged in."
 msgstr "Вход прошел успешно."
 
-#: api/auth_api/views.py:44
+#: api/auth_api/views.py:39
 msgid "Successfully logged out."
 msgstr "Выход прошел успешно."
 
-#: api/auth_api/views.py:72
+#: api/auth_api/views.py:61
 msgid "Successfully registered and logged in."
 msgstr "Регистрация и вход прошли успешно."
+
+#: api/auth_api/views.py:73
+msgid "Value not found or invalid."
+msgstr "Значение не найдено или недействительно."
+
+#: api/auth_api/views.py:83
+msgid "Broadcast not found."
+msgstr "Трансляция не найдена."
+
+#: api/auth_api/views.py:85
+msgid "Publishing allowed."
+msgstr "Публикация разрешена."
 
 #: api/chat/admin.py:30
 msgid "Additional fields"
 msgstr "Дополнительные поля"
 
-#: api/chat/consumers.py:137
-msgid "Invalid message structure."
+#: api/chat/consumers.py:147
+msgid "Invalid event structure."
 msgstr "Неверная структура сообщения."
 
-#: api/chat/consumers.py:140
-msgid "Invalid message type."
+#: api/chat/consumers.py:149
+msgid "Invalid event type."
 msgstr "Неверный тип сообщения."
 
-#: api/chat/models.py:72 api/chat/models.py:114
+#: api/chat/consumers.py:215 api/chat/consumers.py:233
+msgid "You do not have permission to perform this action."
+msgstr "У вас нет прав для выполнения этой операции."
+
+#: api/chat/consumers.py:227
+msgid "Not found."
+msgstr "Не найдено."
+
+#: api/chat/models.py:66 api/chat/models.py:108
 msgid "role"
 msgstr "роль"
 
-#: api/chat/models.py:73
+#: api/chat/models.py:67
 msgid "roles"
 msgstr "роли"
 
-#: api/chat/models.py:102
+#: api/chat/models.py:96
 msgid "Total time of the watched broadcasts (seconds)."
 msgstr "Общее время просмотренных трансляций (секунды)."
 
-#: api/chat/models.py:109
+#: api/chat/models.py:103
 msgid "Username color in chat, hex format."
 msgstr "Цвет имени пользователя в чате, шестнадцатеричный формат."
 
-#: api/chat/models.py:127
+#: api/chat/models.py:121
 msgid "user"
 msgstr "пользователь"
 
-#: api/chat/models.py:128
+#: api/chat/models.py:122
 msgid "users"
 msgstr "пользователи"
 
-#: api/chat/models.py:147
+#: api/chat/models.py:151
 msgid "Whether broadcast is active now."
 msgstr "Активна ли сейчас трансляция."
 
-#: api/chat/models.py:148
-msgid "source link"
-msgstr "ссылка на источник"
-
-#: api/chat/models.py:148
-msgid "Link to broadcast source."
-msgstr "Ссылка на источник трансляции."
-
-#: api/chat/models.py:152
+#: api/chat/models.py:155
 msgid "streamer"
 msgstr "стример"
 
-#: api/chat/models.py:159 api/chat/models.py:248
+#: api/chat/models.py:162 api/chat/models.py:253
 msgid "broadcast"
 msgstr "трансляция"
 
-#: api/chat/models.py:160
+#: api/chat/models.py:163
 msgid "broadcasts"
 msgstr "трансляции"
 
-#: api/chat/models.py:255
+#: api/chat/models.py:260
 msgid "author"
 msgstr "автор"
 
-#: api/chat/models.py:264
+#: api/chat/models.py:269
 msgid "deleter"
 msgstr "тот, кто удалил сообщение"
 
-#: api/chat/models.py:270
+#: api/chat/models.py:275
 msgid "message"
 msgstr "сообщение"
 
-#: api/chat/models.py:271
+#: api/chat/models.py:276
 msgid "messages"
 msgstr "сообщения"
 
-#: api/chat/serializers.py:74 api/chat/serializers.py:90
+#: api/chat/serializers.py:75
+msgid "You cannot change role of yourself."
+msgstr ""
+
+#: api/chat/serializers.py:82
+msgid "Custom images must be of type custom."
+msgstr ""
+
+#: api/chat/serializers.py:136 api/chat/serializers.py:152
 msgid "You can have only one icon per role."
 msgstr "У вас может быть только одна иконка для роли."
 
-#: api/chat/serializers.py:78 api/chat/serializers.py:87
+#: api/chat/serializers.py:140 api/chat/serializers.py:149
 msgid "This field is required."
 msgstr "Это поле обязательно."
 
-#: api/chat/serializers.py:120
+#: api/chat/serializers.py:183
 msgid "You can have only one active broadcast."
 msgstr "У вас может быть только одна активная трансляция."
 
-#: api/chat/views.py:98
+#: api/chat/views.py:101
 msgid "Only inactive broadcasts can be deleted."
 msgstr "Удалять можно только неактивные трансляции."
 
-#: api/chat/views.py:127
+#: api/chat/views.py:134
 msgid "This broadcast is inactive."
 msgstr "Эта трансляция неактивна."
 
-#: config/settings.py:233
+#: config/settings.py:247
 msgid "English"
 msgstr "Английский"
 
-#: config/settings.py:234
+#: config/settings.py:248
 msgid "Russian"
 msgstr "Русский"

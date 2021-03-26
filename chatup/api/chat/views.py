@@ -90,7 +90,7 @@ class BroadcastViewSet(ModelViewSetBase):
         return queryset \
             .select_related('streamer') \
             .only(
-                'created', 'updated', 'title', 'description', 'is_active', 'source_link', 'streamer__username',
+                'created', 'updated', 'title', 'description', 'is_active', 'streamer__username',
                 'streamer__username_color', 'streamer__watchtime', 'streamer__role_id'
             )
 
