@@ -28,7 +28,7 @@ services:
     extra_hosts:
       - localserver:${DHOST_IP}
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./config/nginx_local.conf:/etc/nginx/nginx.conf
 
 volumes:
   chpgdata:
