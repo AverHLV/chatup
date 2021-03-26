@@ -84,3 +84,15 @@ Create needed cache in Redis (celery worker should be started):
 ```
 python manage.py create_cache
 ```
+
+## RTMP clients configuration for streaming
+
+### OBS Studio
+
+![obs_config](./img/obs_local.png)
+
+Stream key has this pattern:
+
+```
+<broadcast_id>?username=<username>&password=<password>
+```
