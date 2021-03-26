@@ -46,10 +46,7 @@ class UserView(APIView):
 
     @swagger_auto_schema(responses={'200': serializers.UserSerializer})
     def get(self, request):
-        serializer = serializers.UserSerializer(
-            request.user,
-            context={'request': request, 'view': self}
-        )
+        serializer = serializers.UserSerializer(request.user, context={'request': request, 'view': self})
         return Response(serializer.data)
 
     @swagger_auto_schema(
@@ -134,10 +131,7 @@ class BroadcastViewSet(ModelViewSetBase):
 
         broadcast = self.get_object()
         if not broadcast.is_active:
-            return Response(
-                {'detail': _('This broadcast is inactive.')},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            return Response({'detail': _('This broadcast is inactive.')}, status=status.HTTP_400_BAD_REQUEST)
 
         watchers = tuple(broadcast.watchers.keys())
         if not watchers:
