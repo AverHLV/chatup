@@ -9,7 +9,7 @@ streaming without dependency on popular platforms.
 
 Use external services or start via Docker:
 ```
-docker-compose up -d
+export DHOST_IP=$(ip addr show docker0 | grep -Po 'inet \K[\d.]+') && sudo -E docker-compose up -d
 ```
 
 Migrate database:
@@ -29,7 +29,7 @@ python manage.py compilemessages
 
 Run development server, celery beat and worker:
 ```
-python manage.py runserver
+python manage.py runserver 0.0.0.0:8000
 celery -A config beat -l INFO
 celery -A config worker -l INFO --concurrency 1
 ```

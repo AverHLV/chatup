@@ -210,7 +210,10 @@ class ChatConsumer(ChatSyncSenderMixin, AsyncJsonWebsocketConsumer):
         response = None
         allowed_roles = {models.Role.SIDS.MODER, models.Role.SIDS.ADMIN, models.Role.SIDS.STREAMER}
         if self.scope['user'].role.sid not in allowed_roles:
-            response = {'type': self.EVENT_TYPES.ERROR, 'content': _('Permission denied')}
+            response = {
+                'type': self.EVENT_TYPES.ERROR,
+                'content': _('You do not have permission to perform this action.'),
+            }
         serializer = serializers.MessageUpdateWSSerializer(data=content)
         if not serializer.is_valid():
             response = {'type': self.EVENT_TYPES.ERROR, 'content': serializer.errors}
@@ -221,11 +224,14 @@ class ChatConsumer(ChatSyncSenderMixin, AsyncJsonWebsocketConsumer):
 
         message = await self.get_message(content['id'], is_delete)
         if not message:
-            await self.send_json({'type': self.EVENT_TYPES.ERROR, 'content': _('Object not found')})
+            await self.send_json({'type': self.EVENT_TYPES.ERROR, 'content': _('Not found.')})
             return
 
         if not self.check_message_permissions(message, is_delete):
-            await self.send_json({'type': self.EVENT_TYPES.ERROR, 'content': _('Permission denied')})
+            await self.send_json({
+                'type': self.EVENT_TYPES.ERROR,
+                'content': _('You do not have permission to perform this action.'),
+            })
             return
 
         await self._update_message(message, is_delete)

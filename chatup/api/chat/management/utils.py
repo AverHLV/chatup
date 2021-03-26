@@ -31,13 +31,8 @@ def create_broadcasts(count: int) -> tuple:
         raise CommandError('No streamers in database')
 
     broadcasts = [
-        models.Broadcast(
-            title=f'Stream #{uuid4()}',
-            source_link=f'https://streams.com/stream{i}',
-            streamer=choice(streamers),
-            is_active=False
-        )
-        for i in range(count)
+        models.Broadcast(title=f'Stream #{uuid4()}', streamer=choice(streamers), is_active=False)
+        for _ in range(count)
     ]
     models.Broadcast.objects.bulk_create(broadcasts)
     active_broadcast = None

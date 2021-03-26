@@ -3,18 +3,25 @@
 <head>
     <meta charset="utf-8"/>
     <title>Room #{{ id }}</title>
+    <link href="https://vjs.zencdn.net/7.11.4/video-js.css" rel="stylesheet" />
+    <script src="https://vjs.zencdn.net/7.11.4/video.min.js"></script>
 </head>
 <body>
-    <textarea id="chat-log" cols="100" rows="20"></textarea><br>
-    <input id="chat-message-input" type="text" size="100"><br>
-    <input id="chat-create" type="button" value="Create message">
-    <input id="delete-message" type="button" value="Delete message">
-    <input id="undo-delete-message" type="button" value="Undo delete message">
-    {{ id|json_script:"room-name" }}
+    <div id="player-block" style="float:left;">
+        <video id="player" class="video-js" width="1000" height="600" controls preload="auto" data-setup="{}">
+            <source src="http://{{ host }}:8001/live/{{ id }}.m3u8" type="application/x-mpegURL" />
+        </video>
+    </div>
+    <div id="chat-block" style="float:left; margin-left:5%;">
+        <textarea id="chat-log" cols="100" rows="20"></textarea><br>
+        <input id="chat-message-input" type="text" size="100"><br>
+        <input id="chat-create" type="button" value="Create message">
+        <input id="chat-delete-message" type="button" value="Delete message">
+        <input id="chat-undo-delete-message" type="button" value="Undo delete message">
+    </div>
 
     <script>
-        const roomName = JSON.parse(document.getElementById('room-name').textContent);
-
+        var player = videojs('#player');
         const chatSocket = new WebSocket(
             {% if use_https %}
             'wss://'
@@ -23,7 +30,7 @@
             {% endif %}
             + window.location.host
             + '{% url "rooms" %}'
-            + roomName
+            + {{ id }}
             + '/'
         );
 
@@ -52,7 +59,7 @@
             document.querySelector('#chat-log').value += 'Event sent: ' + event + '\n';
         };
 
-        document.querySelector('#delete-message').onclick = function(e) {
+        document.querySelector('#chat-delete-message').onclick = function(e) {
             const messageInputDom = document.querySelector('#chat-message-input');
             const event = JSON.stringify({
                 'type': '{{ event_types.DELETE_MESSAGE }}', 'content': {'id': parseInt(messageInputDom.value, 10)}
@@ -62,7 +69,7 @@
             document.querySelector('#chat-log').value += 'Event sent: ' + event + '\n';
         };
 
-        document.querySelector('#undo-delete-message').onclick = function(e) {
+        document.querySelector('#chat-undo-delete-message').onclick = function(e) {
             const messageInputDom = document.querySelector('#chat-message-input');
             const event = JSON.stringify({
                 'type': '{{ event_types.UNDO_DELETE_MESSAGE }}', 'content': {'id': parseInt(messageInputDom.value, 10)}
