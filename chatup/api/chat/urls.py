@@ -26,6 +26,10 @@ if settings.DEBUG:
         path('ws/rooms/', TemplateView.as_view(template_name='rooms.html'), name='rooms'),
         path('ws/rooms/<int:id>/', TemplateView.as_view(
             template_name='room.html',
-            extra_context={'use_https': settings.REST_API_USE_HTTPS, 'event_types': ChatConsumer.EVENT_TYPES}
+            extra_context={
+                'host': settings.REST_API_HOST.hostname,
+                'use_https': settings.REST_API_USE_HTTPS,
+                'event_types': ChatConsumer.EVENT_TYPES,
+            }
         )),
     ]
