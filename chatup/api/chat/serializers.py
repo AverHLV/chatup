@@ -1,4 +1,5 @@
 from django.utils.translation import gettext_lazy as _
+from django.db import transaction
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -22,7 +23,30 @@ class CustomBinaryImageField(BinaryImageField):
         image_type = self.context['request'].data['type']
         image_size = models.Image.SIZES[image_type]
 
-        return super(CustomBinaryImageField, self).to_internal_value(data, resize=image_size)
+        return super().to_internal_value(data, resize=image_size)
+
+
+class RoleIconBinaryImageField(BinaryImageField):
+    """
+    Encoded image is assigned to the user's role_icon field.
+    If there is no such image in database, a new one is created.
+    """
+
+    def to_internal_value(self, data, **kwargs):
+        custom_size = models.Image.SIZES[models.Image.TYPES.CUSTOM]
+        internal_image = super().to_internal_value(data, resize=custom_size)
+
+        image_id = models.Image.objects.filter(image=internal_image).first()
+
+        if not image_id:
+            user = self.context['request'].user
+            with transaction.atomic():
+                user.role_icon_id = models.Image.objects.create(image=internal_image, type=models.Image.TYPES.CUSTOM,
+                                                                description='auto-generated')
+                user.save(update_fields=['role_icon'])
+            return user.role_icon_id
+
+        return image_id
 
 
 class RoleSerializer(TranslatedModelSerializer):
@@ -61,13 +85,21 @@ class UserControlSerializer(UserSerializer):
         super().__init__(*args, **kwargs)
         self.role_icon_old_field = None
 
+    def is_valid(self, raise_exception=False):
         request = self.context['request']
         if request.method not in SAFE_METHODS and 'role_icon' in request.data:
             self.role_icon_old_field = self.fields['role_icon']
-            self.fields['role_icon'] = serializers.PrimaryKeyRelatedField(
-                allow_null=True,
-                queryset=models.Image.objects.only('id'),
-            )
+            try:
+                int(request.data['role_icon'])
+            except ValueError:
+                self.fields['role_icon'] = RoleIconBinaryImageField()
+            else:
+                self.fields['role_icon'] = serializers.PrimaryKeyRelatedField(
+                    allow_null=True,
+                    queryset=models.Image.objects.only('id'),
+                )
+
+        return super(UserControlSerializer, self).is_valid(raise_exception)
 
     def validate_role(self, value):
         request = self.context['request']
