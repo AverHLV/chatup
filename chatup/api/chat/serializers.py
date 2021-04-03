@@ -29,24 +29,11 @@ class CustomBinaryImageField(BinaryImageField):
 class RoleIconBinaryImageField(BinaryImageField):
     """
     Encoded image is assigned to the user's role_icon field.
-    If there is no such image in database, a new one is created.
     """
 
     def to_internal_value(self, data, **kwargs):
         custom_size = models.Image.SIZES[models.Image.TYPES.CUSTOM]
-        internal_image = super().to_internal_value(data, resize=custom_size)
-
-        image_id = models.Image.objects.filter(image=internal_image).first()
-
-        if not image_id:
-            user = self.context['request'].user
-            with transaction.atomic():
-                user.role_icon_id = models.Image.objects.create(image=internal_image, type=models.Image.TYPES.CUSTOM,
-                                                                description='auto-generated')
-                user.save(update_fields=['role_icon'])
-            return user.role_icon_id
-
-        return image_id
+        return super().to_internal_value(data, resize=custom_size)
 
 
 class RoleSerializer(TranslatedModelSerializer):
@@ -91,7 +78,7 @@ class UserControlSerializer(UserSerializer):
             self.role_icon_old_field = self.fields['role_icon']
             try:
                 int(request.data['role_icon'])
-            except ValueError:
+            except (ValueError, TypeError, OverflowError):
                 self.fields['role_icon'] = RoleIconBinaryImageField()
             else:
                 self.fields['role_icon'] = serializers.PrimaryKeyRelatedField(
@@ -114,6 +101,20 @@ class UserControlSerializer(UserSerializer):
             raise ValidationError({'custom_images': _('Custom images must be of type custom.')})
 
         return value
+
+    def save(self, **kwargs):
+        if not isinstance(self.fields['role_icon'], serializers.PrimaryKeyRelatedField):
+            # if role_icon is passed as base64
+            user = self.context['request'].user
+            with transaction.atomic():
+                user.role_icon = models.Image.objects.create(image=self.validated_data['role_icon'],
+                                                             type=models.Image.TYPES.CUSTOM,
+                                                             description='auto-generated')
+                user.save(update_fields=['role_icon'])
+
+            self.validated_data['role_icon'] = user.role_icon
+
+        return super().save(**kwargs)
 
     def to_representation(self, instance):
         if self.role_icon_old_field:
@@ -147,8 +148,8 @@ class ImageSerializer(ImageCacheSerializer):
         if request.method in UPDATE_METHODS:
             self.fields['type'].read_only = True
         elif (
-            request.method in SAFE_METHODS
-            and (not user_role or user_role.sid not in {models.Role.SIDS.ADMIN, models.Role.SIDS.STREAMER})
+                request.method in SAFE_METHODS
+                and (not user_role or user_role.sid not in {models.Role.SIDS.ADMIN, models.Role.SIDS.STREAMER})
         ):
             self.fields.pop('users')
 
