@@ -55,10 +55,14 @@ class BinaryImageField(serializers.Field):
         ),
     }
 
+    def __init__(self, size=None):
+        super().__init__()
+        self.size = size
+
     def to_representation(self, value):
         return base64.b64encode(value)
 
-    def to_internal_value(self, data, resize=None):
+    def to_internal_value(self, data):
         try:
             decoded_image = base64.b64decode(data)
         except base64.binascii.Error:
@@ -71,7 +75,7 @@ class BinaryImageField(serializers.Field):
         except Exception:
             raise ValidationError(self.custom_error_messages['invalid_image'])
 
-        if resize:
-            return resize_image(image_buffer, resize).getvalue()
+        if self.size:
+            return resize_image(image_buffer, self.size).getvalue()
 
         return image_buffer.getvalue()

@@ -19,21 +19,10 @@ class CustomBinaryImageField(BinaryImageField):
     and serialized into binary data.
     """
 
-    def to_internal_value(self, data, **kwargs):
+    def __init__(self):
         image_type = self.context['request'].data['type']
         image_size = models.Image.SIZES[image_type]
-
-        return super().to_internal_value(data, resize=image_size)
-
-
-class RoleIconBinaryImageField(BinaryImageField):
-    """
-    Encoded image is assigned to the user's role_icon field.
-    """
-
-    def to_internal_value(self, data, **kwargs):
-        custom_size = models.Image.SIZES[models.Image.TYPES.CUSTOM]
-        return super().to_internal_value(data, resize=custom_size)
+        super().__init__(size=image_size)
 
 
 class RoleSerializer(TranslatedModelSerializer):
@@ -79,14 +68,15 @@ class UserControlSerializer(UserSerializer):
             try:
                 int(request.data['role_icon'])
             except (ValueError, TypeError, OverflowError):
-                self.fields['role_icon'] = RoleIconBinaryImageField()
+                custom_size = models.Image.SIZES[models.Image.TYPES.CUSTOM]
+                self.fields['role_icon'] = BinaryImageField(size=custom_size)
             else:
                 self.fields['role_icon'] = serializers.PrimaryKeyRelatedField(
                     allow_null=True,
                     queryset=models.Image.objects.only('id'),
                 )
 
-        return super(UserControlSerializer, self).is_valid(raise_exception)
+        return super().is_valid(raise_exception)
 
     def validate_role(self, value):
         request = self.context['request']
@@ -102,16 +92,15 @@ class UserControlSerializer(UserSerializer):
 
         return value
 
+    @transaction.atomic
     def save(self, **kwargs):
-        if not isinstance(self.fields['role_icon'], serializers.PrimaryKeyRelatedField):
-            # if role_icon is passed as base64
+        if isinstance(self.fields['role_icon'], BinaryImageField):
+            # role_icon is passed as base64
             user = self.context['request'].user
-            with transaction.atomic():
-                user.role_icon = models.Image.objects.create(image=self.validated_data['role_icon'],
-                                                             type=models.Image.TYPES.CUSTOM,
-                                                             description='auto-generated')
-                user.save(update_fields=['role_icon'])
-
+            user.role_icon = models.Image.objects.create(image=self.validated_data['role_icon'],
+                                                         type=models.Image.TYPES.CUSTOM,
+                                                         description='auto-generated')
+            user.save(update_fields=['role_icon'])
             self.validated_data['role_icon'] = user.role_icon
 
         return super().save(**kwargs)
