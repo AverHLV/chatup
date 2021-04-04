@@ -55,8 +55,8 @@ class BinaryImageField(serializers.Field):
         ),
     }
 
-    def __init__(self, size=None):
-        super().__init__()
+    def __init__(self, size=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.size = size
 
     def to_representation(self, value):

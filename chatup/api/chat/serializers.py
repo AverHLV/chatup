@@ -19,10 +19,10 @@ class CustomBinaryImageField(BinaryImageField):
     and serialized into binary data.
     """
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         image_type = self.context['request'].data['type']
         image_size = models.Image.SIZES[image_type]
-        super().__init__(size=image_size)
+        super().__init__(size=image_size, *args, **kwargs)
 
 
 class RoleSerializer(TranslatedModelSerializer):
@@ -96,12 +96,11 @@ class UserControlSerializer(UserSerializer):
     def save(self, **kwargs):
         if isinstance(self.fields['role_icon'], BinaryImageField):
             # role_icon is passed as base64
-            user = self.context['request'].user
-            user.role_icon = models.Image.objects.create(image=self.validated_data['role_icon'],
-                                                         type=models.Image.TYPES.CUSTOM,
-                                                         description='auto-generated')
-            user.save(update_fields=['role_icon'])
-            self.validated_data['role_icon'] = user.role_icon
+            self.validated_data['role_icon'] = models.Image.objects.create(
+                image=self.validated_data['role_icon'],
+                type=models.Image.TYPES.CUSTOM,
+                description='auto-generated'
+            )
 
         return super().save(**kwargs)
 
@@ -137,8 +136,8 @@ class ImageSerializer(ImageCacheSerializer):
         if request.method in UPDATE_METHODS:
             self.fields['type'].read_only = True
         elif (
-            request.method in SAFE_METHODS
-            and (not user_role or user_role.sid not in {models.Role.SIDS.ADMIN, models.Role.SIDS.STREAMER})
+                request.method in SAFE_METHODS
+                and (not user_role or user_role.sid not in {models.Role.SIDS.ADMIN, models.Role.SIDS.STREAMER})
         ):
             self.fields.pop('users')
 
