@@ -137,8 +137,8 @@ class ImageSerializer(ImageCacheSerializer):
         if request.method in UPDATE_METHODS:
             self.fields['type'].read_only = True
         elif (
-                request.method in SAFE_METHODS
-                and (not user_role or user_role.sid not in {models.Role.SIDS.ADMIN, models.Role.SIDS.STREAMER})
+            request.method in SAFE_METHODS
+            and (not user_role or user_role.sid not in {models.Role.SIDS.ADMIN, models.Role.SIDS.STREAMER})
         ):
             self.fields.pop('users')
 
