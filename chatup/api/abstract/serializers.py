@@ -7,10 +7,8 @@ from django.utils.translation import get_language_from_request, gettext_lazy as 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from PIL import Image
+from PIL import Image, ImageSequence
 from io import BytesIO
-
-from .utils import resize_image
 
 
 class TranslatedModelSerializer(serializers.ModelSerializer):
@@ -47,7 +45,7 @@ class TranslatedModelSerializer(serializers.ModelSerializer):
 
 
 class BinaryImageField(serializers.Field):
-    """ In-memory image objects are serialized into binary data """
+    """ b64 images to binary data converter """
 
     custom_error_messages = {
         'invalid_image': _(
@@ -55,10 +53,14 @@ class BinaryImageField(serializers.Field):
         ),
     }
 
+    def __init__(self, *args, size=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.size = size
+
     def to_representation(self, value):
         return base64.b64encode(value)
 
-    def to_internal_value(self, data, resize=None):
+    def to_internal_value(self, data):
         try:
             decoded_image = base64.b64decode(data)
         except base64.binascii.Error:
@@ -71,7 +73,30 @@ class BinaryImageField(serializers.Field):
         except Exception:
             raise ValidationError(self.custom_error_messages['invalid_image'])
 
-        if resize:
-            return resize_image(image_buffer, resize).getvalue()
-
+        if self.size:
+            image_buffer = self.resize_image(image_buffer)
         return image_buffer.getvalue()
+
+    def resize_image(self, file: BytesIO) -> BytesIO:
+        """ Resize image depending on its extension """
+
+        image = Image.open(file)
+        ext = image.format
+        resized_image_buffer = BytesIO()
+
+        def _thumbnails(_frames, _size):
+            for frame in _frames:
+                thumbnail = frame.copy()
+                thumbnail.thumbnail(_size, Image.ANTIALIAS)
+                yield thumbnail
+
+        if 'GIF' == ext:
+            frames = ImageSequence.Iterator(image)
+            frames = _thumbnails(frames, self.size)
+            image = next(frames)
+            image.save(resized_image_buffer, format=ext, save_all=True, append_images=list(frames), loop=0)
+        else:
+            image = image.resize(self.size)
+            image.save(resized_image_buffer, format=ext)
+
+        return resized_image_buffer
