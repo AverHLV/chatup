@@ -13,18 +13,6 @@ USER_PUBLIC_FIELDS = 'id', 'username', 'watchtime', 'username_color', 'role'
 USER_FIELDS = USER_PUBLIC_FIELDS + ('email', 'role_icon')
 
 
-class CustomBinaryImageField(BinaryImageField):
-    """
-    In-memory image objects are resized based on image type
-    and serialized into binary data.
-    """
-
-    def __init__(self, *args, **kwargs):
-        image_type = self.context['request'].data['type']
-        kwargs['size'] = models.Image.SIZES[image_type]
-        super().__init__(*args, **kwargs)
-
-
 class RoleSerializer(TranslatedModelSerializer):
     class Meta:
         model = models.Role
@@ -99,7 +87,6 @@ class UserControlSerializer(UserSerializer):
             self.validated_data['role_icon'] = models.Image.objects.create(
                 image=self.validated_data['role_icon'],
                 type=models.Image.TYPES.CUSTOM,
-                description='auto-generated'
             )
 
         return super().save(**kwargs)
@@ -112,7 +99,7 @@ class UserControlSerializer(UserSerializer):
 
 
 class ImageCacheSerializer(serializers.ModelSerializer):
-    image = CustomBinaryImageField()
+    image = BinaryImageField()
 
     class Meta:
         model = models.Image
@@ -180,6 +167,12 @@ class ImageSerializer(ImageCacheSerializer):
             return False
 
         return models.Image.objects.filter(type=image_type, role_id=role_id).exists()
+
+    def is_valid(self, raise_exception=False):
+        image_type = self.context['request'].data.get('type')
+        if image_type and isinstance(image_type, str):
+            self.fields['image'].size = models.Image.SIZES.get(image_type)
+        return super().is_valid(raise_exception)
 
     def save(self, **kwargs):
         instance = super().save(**kwargs)
