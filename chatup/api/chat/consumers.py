@@ -198,7 +198,7 @@ class ChatConsumer(ChatSyncSenderMixin, AsyncJsonWebsocketConsumer):
 
         content['author'] = self.scope['user'].id
         content['broadcast'] = self.scope['broadcast'].id
-        serializer = serializers.MessageSerializer(data=content, context={'request': self.scope})
+        serializer = serializers.MessageWSSerializer(data=content, context={'request': self.scope})
         if not serializer.is_valid():
             return None, serializer.errors
         serializer.save()
