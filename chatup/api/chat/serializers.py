@@ -15,6 +15,8 @@ UPDATE_METHODS = 'PUT', 'PATCH'
 USER_PUBLIC_FIELDS = 'id', 'username', 'watchtime', 'username_color', 'role'
 USER_FIELDS = USER_PUBLIC_FIELDS + ('email', 'role_icon')
 
+regex_image = re.compile("{{image\\|\\d+}}")
+
 
 class RoleSerializer(TranslatedModelSerializer):
     class Meta:
@@ -126,8 +128,8 @@ class ImageSerializer(ImageCacheSerializer):
         if request.method in UPDATE_METHODS:
             self.fields['type'].read_only = True
         elif (
-            request.method in SAFE_METHODS
-            and (not user_role or user_role.sid not in {models.Role.SIDS.ADMIN, models.Role.SIDS.STREAMER})
+                request.method in SAFE_METHODS
+                and (not user_role or user_role.sid not in {models.Role.SIDS.ADMIN, models.Role.SIDS.STREAMER})
         ):
             self.fields.pop('users')
 
@@ -239,21 +241,20 @@ class MessageWSSerializer(MessageSerializer):
     author = serializers.PrimaryKeyRelatedField(queryset=models.User.objects.only('id'))
     deleter = serializers.PrimaryKeyRelatedField(required=False, queryset=models.User.objects.only('id'))
 
-    class Meta(MessageSerializer.Meta):
-        fields = MessageSerializer.Meta.fields
-
     def validate(self, attrs: dict) -> dict:
-        posted_images = {int(image[10:-1]) for image in re.findall("{image_id:\\d+}", attrs['text'])}
+        posted_images = {int(image[8:-2]) for image in regex_image.findall(attrs['text'])}
         if posted_images:
-            available_images = models.Image.objects\
+            available_images = models.Image.objects \
                 .filter(Q(custom_owners=attrs['author'].id) |
-                        Q(type=models.Image.TYPES.SMILEY, role_id=attrs['author'].role.id))\
+                        Q(type=models.Image.TYPES.SMILEY, role_id=attrs['author'].role_id)) \
                 .values_list('pk', flat=True)
             prohibited_images = posted_images - set(available_images)
             if prohibited_images:
-                raise ValidationError({'prohibited_images': _("You do not have access to the submitted images")})
+                prohibited_ids_list = ", ".join(str(image_id) for image_id in prohibited_images)
+                raise ValidationError({
+                    'prohibited_images': _("Images not found: %(images)s") % {"images": prohibited_ids_list}
+                })
 
-        # restore fields in ws case
         self.fields['author'] = UserPublicSerializer()
         self.fields['deleter'] = UserPublicSerializer()
 
