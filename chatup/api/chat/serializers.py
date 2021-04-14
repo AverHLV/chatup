@@ -15,8 +15,6 @@ UPDATE_METHODS = 'PUT', 'PATCH'
 USER_PUBLIC_FIELDS = 'id', 'username', 'watchtime', 'username_color', 'role'
 USER_FIELDS = USER_PUBLIC_FIELDS + ('email', 'role_icon')
 
-regex_image = re.compile("{{image\\|\\d+}}")
-
 
 class RoleSerializer(TranslatedModelSerializer):
     class Meta:
@@ -240,9 +238,10 @@ class MessageSerializer(serializers.ModelSerializer):
 class MessageWSSerializer(MessageSerializer):
     author = serializers.PrimaryKeyRelatedField(queryset=models.User.objects.only('id'))
     deleter = serializers.PrimaryKeyRelatedField(required=False, queryset=models.User.objects.only('id'))
+    regex_image = re.compile(r"{{ image\|\d+ }}")
 
     def validate(self, attrs: dict) -> dict:
-        posted_images = {int(image[8:-2]) for image in regex_image.findall(attrs['text'])}
+        posted_images = {int(image[9:-3]) for image in self.regex_image.findall(attrs['text'])}
         if posted_images:
             available_images = models.Image.objects \
                 .filter(Q(custom_owners=attrs['author'].id) |
@@ -252,7 +251,7 @@ class MessageWSSerializer(MessageSerializer):
             if prohibited_images:
                 prohibited_ids_list = ", ".join(str(image_id) for image_id in prohibited_images)
                 raise ValidationError({
-                    'prohibited_images': _("Images not found: %(images)s") % {"images": prohibited_ids_list}
+                    'text': _("Images not found: %(images)s") % {"images": prohibited_ids_list}
                 })
 
         self.fields['author'] = UserPublicSerializer()
