@@ -1,5 +1,8 @@
+import re
+
 from django.utils.translation import gettext_lazy as _
 from django.db import transaction
+from django.db.models import Q
 
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -123,8 +126,8 @@ class ImageSerializer(ImageCacheSerializer):
         if request.method in UPDATE_METHODS:
             self.fields['type'].read_only = True
         elif (
-            request.method in SAFE_METHODS
-            and (not user_role or user_role.sid not in {models.Role.SIDS.ADMIN, models.Role.SIDS.STREAMER})
+                request.method in SAFE_METHODS
+                and (not user_role or user_role.sid not in {models.Role.SIDS.ADMIN, models.Role.SIDS.STREAMER})
         ):
             self.fields.pop('users')
 
@@ -231,27 +234,28 @@ class MessageSerializer(serializers.ModelSerializer):
         model = models.Message
         fields = '__all__'
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
-        # ws case
-
-        if isinstance(self.context['request'], dict):
-            self.fields['author'] = serializers.PrimaryKeyRelatedField(
-                queryset=models.User.objects.only('id')
-            )
-
-            self.fields['deleter'] = serializers.PrimaryKeyRelatedField(
-                required=False,
-                queryset=models.User.objects.only('id')
-            )
+class MessageWSSerializer(MessageSerializer):
+    author = serializers.PrimaryKeyRelatedField(queryset=models.User.objects.only('id'))
+    deleter = serializers.PrimaryKeyRelatedField(required=False, queryset=models.User.objects.only('id'))
+    regex_image = re.compile(r"{{ image\|\d+ }}")
 
     def validate(self, attrs: dict) -> dict:
-        # restore fields in ws case
+        posted_images = {int(image[9:-3]) for image in self.regex_image.findall(attrs['text'])}
+        if posted_images:
+            available_images = models.Image.objects \
+                .filter(Q(custom_owners=attrs['author'].id) |
+                        Q(type=models.Image.TYPES.SMILEY, role_id=attrs['author'].role_id)) \
+                .values_list('pk', flat=True)
+            prohibited_images = posted_images - set(available_images)
+            if prohibited_images:
+                prohibited_ids_list = ", ".join(str(image_id) for image_id in prohibited_images)
+                raise ValidationError({
+                    'text': _("Images not found: %(images)s") % {"images": prohibited_ids_list}
+                })
 
-        if isinstance(self.context['request'], dict):
-            self.fields['author'] = UserPublicSerializer()
-            self.fields['deleter'] = UserPublicSerializer()
+        self.fields['author'] = UserPublicSerializer()
+        self.fields['deleter'] = UserPublicSerializer()
 
         return attrs
 
