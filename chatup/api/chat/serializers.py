@@ -12,8 +12,8 @@ from api.abstract.serializers import TranslatedModelSerializer, BinaryImageField
 from . import models, tasks
 
 UPDATE_METHODS = 'PUT', 'PATCH'
-USER_PUBLIC_FIELDS = 'id', 'username', 'watchtime', 'username_color', 'role'
-USER_FIELDS = USER_PUBLIC_FIELDS + ('email', 'role_icon')
+USER_PUBLIC_FIELDS = 'id', 'username', 'watchtime', 'username_color', 'role', 'role_icon'
+USER_FIELDS = USER_PUBLIC_FIELDS + ('email',)
 
 
 class RoleSerializer(TranslatedModelSerializer):
@@ -23,6 +23,8 @@ class RoleSerializer(TranslatedModelSerializer):
 
 
 class UserPublicSerializer(serializers.ModelSerializer):
+    role_icon = serializers.IntegerField(source='icon', read_only=True)
+
     class Meta:
         model = models.User
         fields = USER_PUBLIC_FIELDS
@@ -41,7 +43,7 @@ class UserControlSerializer(UserSerializer):
     """ User management by higher powers """
 
     class Meta(UserSerializer.Meta):
-        fields = USER_PUBLIC_FIELDS + ('role_icon', 'custom_images')
+        fields = USER_PUBLIC_FIELDS + ('custom_images',)
         read_only_fields = 'id', 'username', 'username_color', 'watchtime'
         extra_kwargs = {
             'role': {'queryset': models.Role.objects.only('sid')},
