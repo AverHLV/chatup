@@ -9,7 +9,7 @@ streaming without dependency on popular platforms.
 
 Use external services or start via Docker:
 ```
-export DHOST_IP=$(ip addr show docker0 | grep -Po 'inet \K[\d.]+') && sudo -E docker-compose up -d
+sudo docker-compose up -d
 ```
 
 Migrate database:
@@ -43,10 +43,10 @@ Log in with credentials `admin / admin` or `streamer / streamer`.
 
 - `CH_SECRET_KEY`, `default=secret` - project`s secret key, default value allowed only in DEBUG mode;
 - `CH_DEBUG`, `default=true` - whether DEBUG mode should be enabled;
-- `CH_ALLOWED_HOSTS`, `default=*` - allowed hosts list, separated by a comma;
+- `CH_ALLOWED_HOSTS`, `default=*` - allowed hosts list, separated by comma;
 - `DATABASE_URL`, `default=postgres://postgres:postgres@localhost:5432/chatup` - database url;
 - `REDIS_URL`, `default=redis://localhost:6379` - Redis url;
-- `CH_HOST`, `default=http://127.0.0.1:8000` - hostname with a schema;
+- `CH_HOST`, `default=http://127.0.0.1:8000` - hostname with schema;
 - `CH_DEFAULT_LANG`, `default=en` - api default language;
 
 ## Documentation

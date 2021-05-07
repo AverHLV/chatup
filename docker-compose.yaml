@@ -26,9 +26,9 @@ services:
       - 1935:1935
       - 8001:8001
     extra_hosts:
-      - localserver:${DHOST_IP}
+      - localserver:host-gateway
     volumes:
-      - ./config/nginx_local.conf:/etc/nginx/nginx.conf
+      - ./nginx/nginx_local.conf:/etc/nginx/nginx.conf
 
 volumes:
   chpgdata:

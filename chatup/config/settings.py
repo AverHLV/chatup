@@ -21,7 +21,6 @@ SECRET_KEY = environ.get('CH_SECRET_KEY', DEBUG_SECRET_KEY)
 
 TEST = 'test' in sys.argv
 DEBUG = environ.get('CH_DEBUG', 'true') == 'true'
-
 if not DEBUG and SECRET_KEY == DEBUG_SECRET_KEY:
     raise ImproperlyConfigured('Debug mode disabled but default secret key used')
 
@@ -71,7 +70,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
 if DEBUG:
     MIDDLEWARE.insert(2, 'debug_toolbar.middleware.DebugToolbarMiddleware')
 
@@ -175,7 +173,6 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     ]
 }
-
 if DEBUG:
     REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'].append(
         'rest_framework.renderers.BrowsableAPIRenderer'
@@ -197,7 +194,7 @@ CHANNEL_LAYERS = {
 # Debug toolbar
 
 DEBUG_TOOLBAR_CONFIG = {
-    'SHOW_TOOLBAR_CALLBACK': 'config.utils.show_toolbar',
+    'SHOW_TOOLBAR_CALLBACK': lambda request: DEBUG,
 }
 
 # Logging configuration

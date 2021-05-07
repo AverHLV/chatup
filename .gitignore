@@ -87,6 +87,4 @@ target/
 .idea
 venv
 *.ini
-!config_default.ini
-!config_ci_tests.ini
 *.docx

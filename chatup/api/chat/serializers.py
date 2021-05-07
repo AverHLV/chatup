@@ -240,7 +240,7 @@ class MessageSerializer(serializers.ModelSerializer):
 class MessageWSSerializer(MessageSerializer):
     author = serializers.PrimaryKeyRelatedField(queryset=models.User.objects.only('id'))
     deleter = serializers.PrimaryKeyRelatedField(required=False, queryset=models.User.objects.only('id'))
-    regex_image = re.compile(r"{{ image\|\d+ }}")
+    regex_image = re.compile(r'{{ image\|\d+ }}')
 
     def validate(self, attrs: dict) -> dict:
         posted_images = {int(image[9:-3]) for image in self.regex_image.findall(attrs['text'])}
@@ -251,9 +251,9 @@ class MessageWSSerializer(MessageSerializer):
                 .values_list('pk', flat=True)
             prohibited_images = posted_images - set(available_images)
             if prohibited_images:
-                prohibited_ids_list = ", ".join(str(image_id) for image_id in prohibited_images)
+                prohibited_ids_list = ', '.join(str(image_id) for image_id in prohibited_images)
                 raise ValidationError({
-                    'text': _("Images not found: %(images)s") % {"images": prohibited_ids_list}
+                    'text': _('Images not found: %(images)s') % {'images': prohibited_ids_list}
                 })
 
         self.fields['author'] = UserPublicSerializer()
